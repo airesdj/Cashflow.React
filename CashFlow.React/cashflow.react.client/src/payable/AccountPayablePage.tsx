@@ -157,7 +157,7 @@ export default function AccountPayablePage() {
             Account Payable
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 0.6 }}>
-            Manage your expenses and payments.
+            Manage your expenses and payments for the selected period.
           </Typography>
         </Box>
         <Stack direction="row" sx={{ gap: 1.5, flexWrap: "wrap" }}>

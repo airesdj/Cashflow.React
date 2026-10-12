@@ -8,6 +8,7 @@ import AccountPayablePage from './payable/AccountPayablePage';
 import AccountPayableFormPage from './payable/AccountPayableFormPage';
 import AccountReceivablePage from './receivable/AccountReceivablePage';
 import AccountReceivableFormPage from './receivable/AccountReceivableFormPage';
+import CashflowPage from './cashflow/CashflowPage';
 
 function LoginRoute() {
   const { user, login, notice } = useAuth();
@@ -42,7 +43,7 @@ export default function App() {
       <Route path="account-receivable/new" element={<AccountReceivableFormPage />} />
       <Route path="account-receivable/:id/edit" element={<AccountReceivableFormPage />} />
 
-      <Route path="cash-flow" element={<UpcomingPage title="Cash Flow" />} />
+      <Route path="cash-flow" element={<CashflowPage />} />
 
       <Route path="settings/account" element={<UpcomingPage title="Account" />} />
       <Route path="settings/expense" element={<UpcomingPage title="Expense" />} />

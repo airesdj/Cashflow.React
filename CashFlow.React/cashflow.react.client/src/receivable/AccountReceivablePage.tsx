@@ -162,7 +162,7 @@ export default function AccountReceivablePage() {
             Account Receivable
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 0.6 }}>
-            Manage your revenues and payments.
+            Manage your income and receipts for the selected period.
           </Typography>
         </Box>
         <Stack direction="row" sx={{ gap: 1.5, flexWrap: "wrap" }}>

@@ -29,7 +29,6 @@ export default function ReceivableActionDialog({
   busy,
   error,
   unknownOutcome,
-  filters,
   accountName,
   currency,
   onClose,
