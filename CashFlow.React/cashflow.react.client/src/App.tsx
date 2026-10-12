@@ -3,7 +3,7 @@ import { Alert, Box, Paper, Typography } from '@mui/material';
 import { AuthProvider, useAuth } from './AuthContext';
 import LoginPage from './LoginPage';
 import AppLayout from './components/AppLayout';
-import DashboardPage from './pages/DashboardPage';
+import DashboardPage from './dashboard/DashboardPage';
 import AccountPayablePage from './payable/AccountPayablePage';
 import AccountPayableFormPage from './payable/AccountPayableFormPage';
 import AccountReceivablePage from './receivable/AccountReceivablePage';

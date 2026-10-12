@@ -6,7 +6,7 @@ import DashboardCard from '../components/DashboardCard';
 import ExpenseList from '../components/ExpenseList';
 import { useAuth } from '../AuthContext';
 import { ApiError, getJson } from '../api';
-import type { DashboardData } from '../dashboardTypes';
+import type { DashboardData } from './types';
 import { currencyCode, dateLabel, money } from '../format';
 
 const numberCell = { whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', fontSize: '.82rem' };
