@@ -82,12 +82,12 @@ export default function CashflowFilters({
         <TextField
           select
           label="Expense To Exclude"
-          value={filters.expenseTypeOID}
+          value={filters.excludeExpenseTypeOID ?? 0}
           size="small"
           onChange={(event) =>
             setFilters({
               ...filters,
-              expenseTypeOID: Number(event.target.value),
+              excludeExpenseTypeOID: Number(event.target.value),
             })
           }
         >

@@ -11,7 +11,7 @@ export type Cashflow = {
 };
 export type Filters = {
   accountOID: number;
-  expenseTypeOID: number;
+  excludeExpenseTypeOID: number;
   from: string;
   to: string;
 };
@@ -23,6 +23,10 @@ export type Balance = {
 };
 export type ListData = {
   items: Cashflow[];
+  pageNumber: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
   accounts: Account[];
   expenses: Expense[];
   balance: Balance;
@@ -36,8 +40,8 @@ export function filterParams(filters: Filters): URLSearchParams {
     from: filters.from,
     to: filters.to,
   });
-  if (filters.expenseTypeOID)
-    params.set("expense", String(filters.expenseTypeOID));
+  if (filters.excludeExpenseTypeOID)
+    params.set("expense", String(filters.excludeExpenseTypeOID));
   return params;
 }
 
@@ -45,7 +49,7 @@ export function queryFromUrl(params: URLSearchParams): string {
   const query = new URLSearchParams();
   for (const [urlName, apiName] of [
     ["account", "accountOID"],
-    ["expense", "expenseTypeOID"],
+    ["expense", "excludeExpenseTypeOID"],
     ["from", "from"],
     ["to", "to"],
   ]) {

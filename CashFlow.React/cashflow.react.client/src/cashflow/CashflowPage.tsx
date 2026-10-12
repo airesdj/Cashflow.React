@@ -21,6 +21,7 @@ import { currencyCode, dateLabel, money } from "../format";
 import { loadCashflow, CashflowError } from "./api";
 import { filterParams, queryFromUrl } from "./types";
 import type { ListData } from "./types";
+import { Pagination } from "@mui/material";
 import CashflowFilters from "./CashflowFilters";
 
 export default function CashflowPage() {
@@ -29,23 +30,24 @@ export default function CashflowPage() {
   const [params, setParams] = useSearchParams();
   const query = queryFromUrl(params);
   const [revision, setRevision] = useState(0);
-  const requestKey = `${query}|${revision}`;
+  const [pageNumber, setPageNumber] = useState(1);
+  const requestKey = `${query}|${pageNumber}|${revision}`;
   const [result, setResult] = useState<{
     key: string;
     data: ListData | null;
     error: string;
   } | null>(null);
-  const [notice, setNotice] = useState(
-    (location.state as { message?: string } | null)?.message ?? "",
-  );
   const loading = result?.key !== requestKey;
   const data = loading ? null : result?.data;
   const error = loading ? "" : result?.error;
 
   useEffect(() => {
+    const requestParams = new URLSearchParams(query);
+    requestParams.set("page", String(pageNumber));
     const controller = new AbortController();
+
     loadCashflow<ListData>(
-      `/api/Cashflow${query ? `?${query}` : ""}`,
+      `/api/Cashflow?${requestParams.toString()}`,
       controller.signal,
     )
       .then((value) => {
@@ -99,11 +101,6 @@ export default function CashflowPage() {
           </Typography>
         </Box>
       </Stack>
-      {notice && (
-        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setNotice("")}>
-          {notice}
-        </Alert>
-      )}
       {error && (
         <Alert
           severity="error"
@@ -140,8 +137,9 @@ export default function CashflowPage() {
             accounts={data.accounts}
             expenses={data.expenses}
             onApply={(filters) => {
-              setNotice("");
+              setPageNumber(1);
               const next = filterParams(filters);
+
               if (next.toString() === params.toString())
                 setRevision((value) => value + 1);
               else setParams(next);
@@ -182,27 +180,6 @@ export default function CashflowPage() {
             ))}
           </Box>
           <Paper variant="outlined" sx={{ overflow: "hidden" }}>
-            <Stack
-              direction="row"
-              sx={{
-                p: 2.5,
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
-              <Chip
-                size="small"
-                variant="outlined"
-                label={`${data.items.length} items`}
-              />
-              <Typography
-                component="h2"
-                variant="h6"
-                sx={{ fontSize: "1.05rem", fontWeight: 700 }}
-              >
-              </Typography>
-            </Stack>
             <TableContainer sx={{ maxHeight: "42vh", overflowY: 'auto', overflowX: 'hidden' }}>
               <Table
                 size="small"
@@ -233,11 +210,11 @@ export default function CashflowPage() {
                       </TableCell>
                     </TableRow>
                   )}
-                  {data.items.map((item) => {
+                  {data.items.map((item, index) => {
                     const description = item.description || "Expense";
                     const rowColor = item.launchType == "EXPENSE" ? "error.main" : "#1976d2";
                     return (
-                      <TableRow>
+                      <TableRow key={index} hover>
                         <TableCell sx={{ whiteSpace: "nowrap", py: 1.8 }}>
                           <Typography
                             variant="body2"
@@ -284,6 +261,19 @@ export default function CashflowPage() {
                 </TableBody>
               </Table>
             </TableContainer>
+
+            {data.totalPages > 1 && (
+              <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
+                <Pagination
+                  count={data.totalPages}
+                  page={data.pageNumber}
+                  onChange={(_, selectedPage) => setPageNumber(selectedPage)}
+                  color="primary"
+                  showFirstButton
+                  showLastButton
+                />
+              </Box>
+            )}
           </Paper>
         </>
       )}

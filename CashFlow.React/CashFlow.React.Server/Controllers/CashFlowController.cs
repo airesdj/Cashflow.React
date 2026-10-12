@@ -2,6 +2,8 @@
 using CashFlow.React.Server.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using X.PagedList.Extensions;
 
 namespace CashFlow.React.Server.Controllers
 {
@@ -42,8 +44,9 @@ namespace CashFlow.React.Server.Controllers
         }
 
         [HttpGet]
-        public IActionResult List([FromQuery] long? accountOID, [FromQuery] long excludeEexpenseTypeOID = 0,
-            [FromQuery] string? from = null, [FromQuery] string? to = null) => Execute(() =>
+        public IActionResult List([FromQuery] long? accountOID, [FromQuery] int? page, 
+                            [FromQuery] long excludeExpenseTypeOID = 0,
+                            [FromQuery] string? from = null, [FromQuery] string? to = null) => Execute(() =>
             {
                 var defaults = Utils.Common.GetFixedFilterValues(accountRepo);
                 var accountId = accountOID ?? defaults.Item2;
@@ -59,22 +62,29 @@ namespace CashFlow.React.Server.Controllers
                 var expenses = typeRepo.GetExpenseList();
                 if (!accounts.Any(x => x.OID == accountId))
                     return BadRequest(new { message = "Select a valid account." });
-                if (excludeEexpenseTypeOID != 0 && !expenses.Any(x => x.OID == excludeEexpenseTypeOID))
+                if (excludeExpenseTypeOID != 0 && !expenses.Any(x => x.OID == excludeExpenseTypeOID))
                     return BadRequest(new { message = "Select a valid expense type." });
 
                 // Keep the original repository/helper argument types. Widen these casts if your repository supports larger IDs.
                 var accountFilter = Convert.ToInt16(accountId);
-                var expenseFilter = Convert.ToInt16(excludeEexpenseTypeOID);
-                var paginated_list = cashRepo.Get(accountFilter, expenseFilter, fromDate, toDate);
-                var items = paginated_list.Item1.OrderByDescending(x => x.DueDate).ThenBy(x => x.Payday).ToArray();
+                var expenseFilter = Convert.ToInt16(excludeExpenseTypeOID);
+                var list = cashRepo.Get(accountFilter, expenseFilter, fromDate, toDate);
+                var items = list.Item1.OrderByDescending(x => x.DueDate).ThenBy(x => x.Payday).ToArray();
                 var balance = Common.GetBalanceDetailsModel(accountRepo, accountFilter, expenseFilter, 0, fromDate, toDate);
+
+                var pagedItems = items.ToPagedList(page ?? 1, 10);
+
                 return Ok(new
                 {
-                    items,
+                    items = pagedItems.ToList(),
+                    pageNumber = pagedItems.PageNumber,
+                    pageSize = pagedItems.PageSize,
+                    totalItems = pagedItems.TotalItemCount,
+                    totalPages = pagedItems.PageCount,
                     accounts,
                     expenses,
                     balance,
-                    filters = new { accountOID = accountId, excludeEexpenseTypeOID, from = Common.Iso(fromDate), to = Common.Iso(toDate) },
+                    filters = new { accountOID = accountId, excludeExpenseTypeOID, from = Common.Iso(fromDate), to = Common.Iso(toDate) },
                     today = Common.Iso(Common.LocalNow.Date)
                 });
             });
