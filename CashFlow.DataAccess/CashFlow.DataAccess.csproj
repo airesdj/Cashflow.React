@@ -1,0 +1,56 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Platforms>x64</Platforms>
+		<Title>Cashflow DataAccess</Title>
+		<Authors>Aires E Marystela</Authors>
+		<Copyright>AroundWorld ©  2024</Copyright>
+		<Description>Cashflow DataAccess</Description>
+		<AssemblyVersion>2.1.3</AssemblyVersion>
+		<FileVersion>2.1.3</FileVersion>
+		<NoWarn>$(NoWarn);MSB3277;MVC1004</NoWarn>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+		<Product>Debug .Net Version</Product>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<Product>Release .Net Version</Product>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="AutoMapper" Version="16.1.1" />
+		<PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
+		<PackageReference Include="EntityFramework" Version="6.5.1" />
+		<PackageReference Include="log4net" Version="3.3.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="8.0.10" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Analyzers" Version="8.0.10" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.10" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.10">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+		<PackageReference Include="System.Drawing.Common" Version="8.0.10" />
+		<PackageReference Include="System.Text.Json" Version="8.0.5" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Entities\" />
+	  <Folder Include="Exceptions\" />
+	  <Folder Include="Mappers\" />
+	  <Folder Include="Utils\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\CashFlow.Core\CashFlow.Core.csproj" />
+	</ItemGroup>
+
+</Project>

@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.10.12224.181
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CashFlow.Core", "CashFlow.Core\CashFlow.Core.csproj", "{9F3643EE-54D5-4926-954E-21529334EA0D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CashFlow.DataAccess", "CashFlow.DataAccess\CashFlow.DataAccess.csproj", "{4D5E6FB5-7372-4669-BE1B-31A4202E37D7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9F3643EE-54D5-4926-954E-21529334EA0D} = {9F3643EE-54D5-4926-954E-21529334EA0D}
+	EndProjectSection
+EndProject
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "cashflow.react.client", "CashFlow.React\cashflow.react.client\cashflow.react.client.esproj", "{876190C2-5DC7-194F-9429-64068A104B30}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CashFlow.React.Server", "CashFlow.React\CashFlow.React.Server\CashFlow.React.Server.csproj", "{E4A8ABCD-5AC3-40E2-B4CE-3409985AC5D2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9F3643EE-54D5-4926-954E-21529334EA0D}.Debug|x64.ActiveCfg = Debug|x64
+		{9F3643EE-54D5-4926-954E-21529334EA0D}.Release|x64.ActiveCfg = Release|x64
+		{4D5E6FB5-7372-4669-BE1B-31A4202E37D7}.Debug|x64.ActiveCfg = Debug|x64
+		{4D5E6FB5-7372-4669-BE1B-31A4202E37D7}.Release|x64.ActiveCfg = Release|x64
+		{876190C2-5DC7-194F-9429-64068A104B30}.Debug|x64.ActiveCfg = Debug|x64
+		{876190C2-5DC7-194F-9429-64068A104B30}.Debug|x64.Build.0 = Debug|x64
+		{876190C2-5DC7-194F-9429-64068A104B30}.Debug|x64.Deploy.0 = Debug|x64
+		{876190C2-5DC7-194F-9429-64068A104B30}.Release|x64.ActiveCfg = Release|x64
+		{E4A8ABCD-5AC3-40E2-B4CE-3409985AC5D2}.Debug|x64.ActiveCfg = Debug|x64
+		{E4A8ABCD-5AC3-40E2-B4CE-3409985AC5D2}.Debug|x64.Build.0 = Debug|x64
+		{E4A8ABCD-5AC3-40E2-B4CE-3409985AC5D2}.Release|x64.ActiveCfg = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C69D2A4E-9C47-4513-96FC-7BCDA2900F6C}
+	EndGlobalSection
+EndGlobal

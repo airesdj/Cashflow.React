@@ -1,0 +1,6 @@
+@CashFlow.React.Server_HostAddress = http://localhost:5008
+
+GET {{CashFlow.React.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

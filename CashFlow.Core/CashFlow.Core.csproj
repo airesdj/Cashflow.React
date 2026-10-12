@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<OutputType>Library</OutputType>
+	<TargetFramework>net8.0</TargetFramework>
+	<ImplicitUsings>enable</ImplicitUsings>
+	<Nullable>enable</Nullable>
+	<Platforms>x64</Platforms>
+	<Title>Cashflow Core</Title>
+	<Authors>Aires E Marystela</Authors>
+	<Copyright>AroundWorld ©  2024</Copyright>
+	<Description>Cashflow Core</Description>
+	<AssemblyVersion>2.1.0</AssemblyVersion>
+	<FileVersion>2.1.0</FileVersion>
+	<NoWarn>$(NoWarn);MSB3277;MVC1004</NoWarn>
+  </PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+		<Product>Debug .Net Version</Product>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<Product>Release .Net Version</Product>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Folder Include="Classes\" />
+	  <Folder Include="DTO\" />
+	  <Folder Include="Exceptions\" />
+	</ItemGroup>
+
+</Project>

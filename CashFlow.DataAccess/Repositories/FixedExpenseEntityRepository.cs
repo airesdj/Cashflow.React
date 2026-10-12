@@ -1,0 +1,228 @@
+﻿using CashFlow.Core.DTO;
+using CashFlow.DataAccess.Entities;
+using CashFlow.DataAccess.Repositories.Base;
+using log4net;
+using Microsoft.EntityFrameworkCore;
+
+namespace CashFlow.DataAccess.Repositories
+{
+    public class FixedExpenseEntityRepository : BaseRepository
+    {
+        private readonly Context _context;
+        public FixedExpenseEntityRepository(Context context)
+        {
+            Log = LogManager.GetLogger("AccountEntityRepository");
+            _context = context;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                GC.SuppressFinalize(this);
+                base.Dispose(disposing);
+            }
+        }
+
+        public FixedExpenseDTO GetFixedExpense(long oid)
+        {
+            try
+            {
+                return mapperFactory.getMapper().Map<FixedExpenseDTO>(_context.fixedexpenses.AsNoTracking().FirstOrDefault(x => x.OID == oid));
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+                return null!;
+            }
+        }
+
+        public List<FixedExpenseDTO> GetFixedExpenseList()
+        {
+            try
+            {
+                List<FixedExpenseDTO> list = new List<FixedExpenseDTO>();
+
+                list = _context.fixedexpenses.AsNoTracking()
+                        .Where(x => !x.IsDeleted)
+                        .Select(o => new FixedExpenseDTO
+                        {
+                            OID = o.OID,
+                            ExpenseTypeOID = o.ExpenseTypeOID,
+                            Description = o.Description,
+                            IsFortnightlyExpense = o.IsFortnightlyExpense,
+                            IsMonthlyExpense = o.IsMonthlyExpense,
+                            AdditionalDays = o.AdditionalDays,
+                            DayOfMonth = o.DayOfMonth,
+                            ExpenseValue = o.ExpenseValue,
+                            IsDeleted = o.IsDeleted
+                        })
+                        .OrderBy(o => o.ExpenseTypeOID).ThenBy(o => o.Description)
+                        .ToList();
+
+                return list;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+                return null!;
+            }
+        }
+
+        public long Add(FixedExpenseDTO model)
+        {
+            try
+            {
+                long id = 0;
+                FixedExpenseEntity item = new FixedExpenseEntity
+                {
+                    ExpenseTypeOID = model.ExpenseTypeOID,
+                    Description = model.Description,
+                    IsFortnightlyExpense = model.IsFortnightlyExpense,
+                    IsMonthlyExpense = model.IsMonthlyExpense,
+                    AdditionalDays = model.AdditionalDays,
+                    DayOfMonth = model.DayOfMonth,
+                    ExpenseValue = model.ExpenseValue,
+                    IsDeleted = false
+                };
+
+                _context.fixedexpenses.Add(item);
+                _context.SaveChanges();
+                id = item.OID;
+
+                return id;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+                return 0;
+            }
+        }
+
+        public bool Delete(long oid)
+        {
+            try
+            {
+                bool ret = false;
+                var FixedExpense = _context.fixedexpenses.FirstOrDefault(x => x.OID == oid);
+                if (FixedExpense != null)
+                {
+                    FixedExpense.IsDeleted = true;
+
+                    _context.Entry(FixedExpense).State = EntityState.Modified;
+                    _context.SaveChanges();
+
+                    ret = true;
+                }
+                else
+                    Log.Error("FixedExpense NOT found.");
+
+                return ret;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+                return false;
+            }
+        }
+
+        public bool Update(FixedExpenseDTO model)
+        {
+            try
+            {
+                bool ret = false;
+
+                var FixedExpense = _context.fixedexpenses.FirstOrDefault(x => x.OID == model.OID);
+                if (FixedExpense != null)
+                {
+                    FixedExpense.ExpenseTypeOID = model.ExpenseTypeOID;
+                    FixedExpense.Description = model.Description;
+                    FixedExpense.IsFortnightlyExpense = model.IsFortnightlyExpense;
+                    FixedExpense.IsMonthlyExpense = model.IsMonthlyExpense;
+                    FixedExpense.AdditionalDays = model.AdditionalDays;
+                    FixedExpense.DayOfMonth = model.DayOfMonth;
+                    FixedExpense.ExpenseValue = model.ExpenseValue;
+                    FixedExpense.IsDeleted = false;
+
+                    _context.Entry(FixedExpense).State = EntityState.Modified;
+                    _context.SaveChanges();
+
+                    ret = true;
+                }
+                else
+                    Log.Error("FixedExpense NOT found.");
+
+                return ret;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+                return false;
+            }
+        }
+
+        public bool IsFortnightlyLaunched(DateTime datelimit)
+        {
+            long expenseoid = 1;
+            return _context.accountspayable.AsNoTracking().Any(x => x.ExpenseTypeOID == expenseoid && x.DueDate >= datelimit);
+        }
+
+        public List<ExpenseTypeDTO> GetAllExpenseTypeTotal()
+        {
+            try
+            {
+                List<ExpenseTypeDTO> list = new List<ExpenseTypeDTO>();
+
+                var excluding = new long[] { 46, 47, 48, 49 };
+
+                var expenses_montly = (from f in _context.fixedexpenses.AsNoTracking()
+                                       join e in _context.expenses.AsNoTracking() on f.ExpenseTypeOID equals e.OID
+                                       where !f.IsDeleted && f.IsMonthlyExpense && !excluding.Contains(e.OID)
+                                       group f by new { e.OID, e.Name } into g
+                                       select new ExpenseTypeDTO { Name = g.Key.Name, EstimatedValue = g.Sum(p => p.ExpenseValue) ?? 0 }).ToList();
+
+                list.AddRange(expenses_montly.Where(x => x.EstimatedValue > 0));
+
+                var expenses_fortn = (from f in _context.fixedexpenses.AsNoTracking()
+                                      join e in _context.expenses.AsNoTracking() on f.ExpenseTypeOID equals e.OID
+                                      where !f.IsDeleted && f.IsFortnightlyExpense && !excluding.Contains(e.OID)
+                                      group f by new { e.Name } into g
+                                      select new ExpenseTypeDTO { Name = g.Key.Name, EstimatedValue = (g.Sum(p => p.ExpenseValue) * 2) ?? 0 }).ToList();
+
+                foreach (var expense in expenses_fortn.Where(x => x.EstimatedValue > 0).ToList())
+                {
+                    var item = list.FirstOrDefault(x => x.Name == expense.Name);
+
+                    if (item == null)
+                        list.Add(expense);
+                    else
+                        item.EstimatedValue += expense.EstimatedValue;
+                }
+
+                var expenses_week = (from f in _context.fixedexpenses.AsNoTracking()
+                                     join e in _context.expenses.AsNoTracking() on f.ExpenseTypeOID equals e.OID
+                                     where !f.IsDeleted && !f.IsMonthlyExpense && !excluding.Contains(e.OID)
+                                           && !f.IsFortnightlyExpense
+                                     group f by new { e.Name } into g
+                                     select new ExpenseTypeDTO { Name = g.Key.Name, EstimatedValue = (g.Sum(p => p.ExpenseValue) * 4) ?? 0 }).ToList();
+
+                foreach (var expense in expenses_week.Where(x => x.EstimatedValue > 0).ToList())
+                {
+                    var item = list.FirstOrDefault(x => x.Name == expense.Name);
+
+                    if (item == null)
+                        list.Add(expense);
+                    else
+                        item.EstimatedValue += expense.EstimatedValue;
+                }
+
+                return list.OrderByDescending(x => x.EstimatedValue).ToList();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+                return null!;
+            }
+        }
+    }
+}
