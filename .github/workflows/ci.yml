@@ -35,7 +35,7 @@ jobs:
         run: npm.cmd ci
 
       - name: Build React and TypeScript
-        working-directory: cashflow.react.client
+        working-directory: CashFlow.React/cashflow.react.client
         run: npm.cmd run build
 
       - name: Publish .NET server with built client
