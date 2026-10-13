@@ -121,7 +121,7 @@ return (
                 <Stack spacing={3} sx={{ minWidth: 0 }}>
                   <DashboardCard
                     title="Balance of All Accounts"
-                    subtitle={`Revenue for ${selectedLabel}. Balance uses your existing account calculation.`}
+                    subtitle={`Account balances for ${selectedLabel}.`}
                   >
                     <TableContainer sx={{ overflowX: 'auto' }}>
                       <Table
@@ -252,7 +252,6 @@ return (
 
                   <DashboardCard
                     title="Fixed Expenses"
-                    subtitle="Recurring monthly totals"
                   >
                     <ExpenseList
                       items={data.expenseTotalList}
@@ -264,8 +263,7 @@ return (
 
                 <Stack spacing={3} sx={{ minWidth: 0 }}>
                   <DashboardCard
-                    title="Pay List of the Day"
-                    subtitle={`Due today · ${dateLabel(data.today)}`}
+                    title={`Payments Due on ${dateLabel(data.today)}`}
                     action={
                       <Chip
                         size="small"
@@ -338,14 +336,9 @@ return (
                   </DashboardCard>
 
                   <DashboardCard
-                    title="Transfer to Offset Account"
-                    subtitle={selectedLabel}
+                    title={`Transfer to Offset Account — ${selectedLabel ?? ""}`}
                   >
                     <Box sx={{ p: 2.5 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        Transferred this month
-                      </Typography>
-
                       <Typography
                         sx={{
                           fontWeight: 700,
@@ -425,7 +418,7 @@ return (
                   </DashboardCard>
 
                   <DashboardCard
-                    title="Total Expenses for Month"
+                    title="Total Expenses for the Selected Month"
                     subtitle="Choose a month to update the monthly dashboard figures"
                     action={
                       <FormControl size="small" sx={{ minWidth: 185 }}>
