@@ -120,8 +120,7 @@ return (
               >
                 <Stack spacing={3} sx={{ minWidth: 0 }}>
                   <DashboardCard
-                    title="Balance of All Accounts"
-                    subtitle={`Account balances for ${selectedLabel}.`}
+                    title={`Balance of All Accounts in ${selectedLabel}`}
                   >
                     <TableContainer sx={{ overflowX: 'auto' }}>
                       <Table
@@ -336,7 +335,7 @@ return (
                   </DashboardCard>
 
                   <DashboardCard
-                    title={`Transfer to Offset Account — ${selectedLabel ?? ""}`}
+                    title={`Transfer to Offset Account in ${selectedLabel}`}
                   >
                     <Box sx={{ p: 2.5 }}>
                       <Typography
@@ -418,7 +417,7 @@ return (
                   </DashboardCard>
 
                   <DashboardCard
-                    title="Total Expenses for the Selected Month"
+                    title={`Total Expenses in ${selectedLabel}`}
                     subtitle="Choose a month to update the monthly dashboard figures"
                     action={
                       <FormControl size="small" sx={{ minWidth: 185 }}>
