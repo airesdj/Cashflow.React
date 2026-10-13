@@ -3,8 +3,6 @@ using CashFlow.DataAccess.Repositories;
 using CashFlow.React.Server.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
-using System.Globalization;
 
 namespace CashFlow.React.Server.Controllers
 {

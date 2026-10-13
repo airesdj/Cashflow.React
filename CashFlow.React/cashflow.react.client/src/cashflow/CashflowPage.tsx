@@ -26,7 +26,6 @@ import CashflowFilters from "./CashflowFilters";
 
 export default function CashflowPage() {
   const { expire } = useAuth();
-  const location = useLocation();
   const [params, setParams] = useSearchParams();
   const query = queryFromUrl(params);
   const [revision, setRevision] = useState(0);

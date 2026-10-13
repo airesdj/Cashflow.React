@@ -2,7 +2,6 @@
 using CashFlow.React.Server.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using X.PagedList.Extensions;
 
 namespace CashFlow.React.Server.Controllers
@@ -37,14 +36,14 @@ namespace CashFlow.React.Server.Controllers
                 logger.LogError(exception, "Cash flow request failed: {Method} {Path}", Request.Method, Request.Path);
                 return StatusCode(StatusCodes.Status500InternalServerError, new
                 {
-                    message = write ? "The change could not be confirmed. Refresh the list before trying again." : "Unable to load account cash flow data. Please try again.",
+                    message = write ? "The change could not be confirmed. Refresh the list before trying again." : "Unable to load cash flow data. Please try again.",
                     outcomeUnknown = write
                 });
             }
         }
 
         [HttpGet]
-        public IActionResult List([FromQuery] long? accountOID, [FromQuery] int? page, 
+        public IActionResult List([FromQuery] long? accountOID, [FromQuery] int? page,
                             [FromQuery] long excludeExpenseTypeOID = 0,
                             [FromQuery] string? from = null, [FromQuery] string? to = null) => Execute(() =>
             {

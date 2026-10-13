@@ -128,14 +128,8 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public AccountDTO GetAccountByName(string name, long? oid = null)
-        {
-            var item = _context.accounts.AsNoTracking().Where(x => x.Name == name && (oid == null || x.OID != oid)).FirstOrDefault();
-            if (item != null)
-                return mapperFactory.getMapper().Map<AccountDTO>(item);
-            else
-                return null!;
-        }
+        public bool GetAccountByName(string name, long oid = 0)
+            => _context.accounts.AsNoTracking().Any(x => x.Name == name && (oid == 0 || x.OID != oid));
 
         public List<AccountDTO> GetAccountList()
         {
