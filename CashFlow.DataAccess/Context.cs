@@ -1,13 +1,11 @@
 ﻿namespace CashFlow.DataAccess
 {
     using CashFlow.DataAccess.Entities;
-    using log4net;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Metadata;
 
     public class Context : DbContext
     {
-        private ILog Log = LogManager.GetLogger("Context:");
         public Context(DbContextOptions<Context> options) : base(options)
         {
             this.downloadRunning = false;
@@ -27,8 +25,6 @@
         {
             if (downloadRunning)
             {
-                Log.Info("Download is running. Auto-Increment, from all tables, is being disabled.");
-
                 modelBuilder.Entity<AccountEntity>()
                     .Property(b => b.OID)
                     .HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.None);

@@ -1,6 +1,6 @@
 ﻿using CashFlow.Core.Classes;
 using CashFlow.DataAccess.Repositories.Base;
-using log4net;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
 namespace CashFlow.DataAccess.Repositories
@@ -8,20 +8,14 @@ namespace CashFlow.DataAccess.Repositories
     public class MaintenanceRepository : BaseRepository
     {
         private readonly Context _context;
-        public MaintenanceRepository(Context context)
+        public MaintenanceRepository(Context context, ILogger<BaseRepository> logger) : base(logger)
         {
-            Log = LogManager.GetLogger("MaintenanceRepository");
             _context = context;
         }
 
         protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                GC.SuppressFinalize(this);
-                base.Dispose(disposing);
-            }
-        }
+            => base.Dispose(disposing);
+
 
         public bool UploadDataViaDumpFile(string pathlog)
         {

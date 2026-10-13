@@ -154,9 +154,9 @@ export default function CashflowPage() {
           >
             {[
               ["Previous Balance", data.balance.previousBalance],
-              ["Final Balance", data.balance.finalBalance],
               ["Total Revenues", data.balance.totalRevenues],
               ["Total Expenses", data.balance.totalExpenses],
+              ["Final Balance", data.balance.finalBalance]
             ].map(([label, amount]) => (
               <Paper key={String(label)} variant="outlined" sx={{ p: 2.5 }}>
                 <Typography variant="body2" color="text.secondary">
@@ -176,7 +176,7 @@ export default function CashflowPage() {
             ))}
           </Box>
           <Paper variant="outlined" sx={{ overflow: "hidden" }}>
-            <TableContainer sx={{ maxHeight: "42vh", overflowY: 'auto', overflowX: 'hidden' }}>
+            <TableContainer sx={{ maxHeight: "44vh", overflowY: 'auto', overflowX: 'hidden' }}>
               <Table
                 size="small"
                 stickyHeader
@@ -185,10 +185,10 @@ export default function CashflowPage() {
               >
                 <TableHead>
                   <TableRow>
-                    <TableCell>Due Date</TableCell>
-                    <TableCell>Description</TableCell>
-                    <TableCell align="right">Value</TableCell>
-                    <TableCell>Payday</TableCell>
+                    <TableCell sx={{ width: "10%" }}>Due Date</TableCell>
+                    <TableCell sx={{ width: "55%" }}>Description</TableCell>
+                    <TableCell sx={{ width: "25%" }} align="right">Value</TableCell>
+                    <TableCell sx={{ width: "10%" }}>Payday</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -259,7 +259,7 @@ export default function CashflowPage() {
             </TableContainer>
 
             {data.totalPages > 1 && (
-              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: 2, p: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: 2, p: 1 }}>
                   <Typography variant="body2" color="text.secondary">
                     Page {data.pageNumber} of {data.totalPages}
                   </Typography>

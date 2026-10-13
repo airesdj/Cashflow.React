@@ -40,7 +40,7 @@ namespace CashFlow.React.Server.Controllers
         [HttpGet]
         public IActionResult List([FromQuery] int? page) => Execute(() =>
         {
-            var pagedItems = accountRepo.GetAccountList().ToPagedList(page ?? 1, 10);
+            var pagedItems = accountRepo.GetAccountList().ToPagedList(page ?? 1, Common.TOTAL_ITEMS_PER_PAGE);
 
             return Ok(new
             {
@@ -53,7 +53,7 @@ namespace CashFlow.React.Server.Controllers
         });
 
         [HttpGet("Form")]
-        public IActionResult Form([FromQuery] long? accountOID) => Execute(() =>
+        public IActionResult Form() => Execute(() =>
         {
             return Ok(new
             {
@@ -81,6 +81,7 @@ namespace CashFlow.React.Server.Controllers
 
             var now = Common.LocalNow;
             var id = accountRepo.Add(input);
+
             if (id <= 0) return StatusCode(500, new { message = "This account was not added." });
             return CreatedAtAction(nameof(Get), new { id }, new { oid = id, message = "Account added successfully." });
         }, write: true);
@@ -90,9 +91,11 @@ namespace CashFlow.React.Server.Controllers
         public IActionResult Edit(int id, [FromBody] AccountDTO input) => Execute(() =>
         {
             if (!ValidateInput(input)) return ValidationProblem(ModelState);
+
             var model = accountRepo.GetAccount(id);
             if (model is null) return NotFound(new { message = "This account no longer exists." });
-            if (!accountRepo.Update(model)) return StatusCode(500, new { message = "This account was not updated." });
+            
+            if (!accountRepo.Update(input)) return StatusCode(500, new { message = "This account was not updated." });
             return Ok(new { message = "Account updated successfully." });
         }, write: true);
 

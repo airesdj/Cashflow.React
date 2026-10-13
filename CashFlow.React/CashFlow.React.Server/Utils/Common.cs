@@ -2,13 +2,13 @@
 using CashFlow.Core.DTO;
 using CashFlow.Core.Models;
 using CashFlow.DataAccess.Repositories;
-using log4net;
 using System.Globalization;
 
 namespace CashFlow.React.Server.Utils
 {
     public class Common
     {
+        public const int TOTAL_ITEMS_PER_PAGE = 10;
         public static bool TryDate(string? text, out DateTime date) => DateTime.TryParseExact(text,
             "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
         public static string Iso(DateTime date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
@@ -18,9 +18,14 @@ namespace CashFlow.React.Server.Utils
         public static int RECEIVABLE_MARY_PAYMENT_OID = 1;
         public static int RECEIVABLE_AIRES_PAYMENT_OID = 12;
 
-        private static ILog Log = LogManager.GetLogger("Common");
-
         private static AESEncryptor logAES = null!;
+
+        private static ILogger? logger;
+
+        public static void ConfigureLogger(ILoggerFactory loggerFactory)
+        {
+            logger = loggerFactory.CreateLogger("Common");
+        }
 
         public static Tuple<long, long, DateTime, DateTime> GetFixedFilterValues(AccountEntityRepository accountRepo)
         {
@@ -31,7 +36,7 @@ namespace CashFlow.React.Server.Utils
             }
             catch (Exception ex)
             {
-                Log.Error(ex);
+                logger?.LogError(ex, "GetFixedFilterValues()");
                 return null!;
             }
         }
@@ -44,7 +49,7 @@ namespace CashFlow.React.Server.Utils
             }
             catch (Exception ex)
             {
-                Log.Error(ex);
+                logger?.LogError(ex, "GetAccountList()");
                 return new List<AccountDTO>();
             }
         }
@@ -68,18 +73,14 @@ namespace CashFlow.React.Server.Utils
             }
             catch (Exception ex)
             {
-                Log.Error(ex);
+                logger?.LogError(ex, "GetBalanceDetailsModel()");
                 return new BalanceModel();
             }
         }
 
         private static void AesInitialize()
-        {
-            if (logAES == null)
-            {
-                logAES = new AESEncryptor();
-            }
-        }
+            => logAES ??= new AESEncryptor();
+
 
         public static string AesEncrypt(string text)
         {

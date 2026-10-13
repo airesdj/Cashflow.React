@@ -1,28 +1,22 @@
 ﻿using CashFlow.Core.DTO;
 using CashFlow.DataAccess.Entities;
 using CashFlow.DataAccess.Repositories.Base;
-using log4net;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace CashFlow.DataAccess.Repositories
 {
     public class ExpenseEntityRepository : BaseRepository
     {
         private readonly Context _context;
-        public ExpenseEntityRepository(Context context)
+        public ExpenseEntityRepository(Context context, ILogger<BaseRepository> logger) : base(logger)
         {
-            Log = LogManager.GetLogger("AccountEntityRepository");
             _context = context;
         }
 
         protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                GC.SuppressFinalize(this);
-                base.Dispose(disposing);
-            }
-        }
+            => base.Dispose(disposing);
+
 
         public ExpenseTypeDTO GetExpense(long oid)
         {
@@ -37,14 +31,8 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public ExpenseTypeDTO GetExpenseByName(string name, long? oid = null)
-        {
-            var item = _context.expenses.AsNoTracking().Where(x => x.Name == name && (oid == null || x.OID != oid)).FirstOrDefault();
-            if (item != null)
-                return mapperFactory.getMapper().Map<ExpenseTypeDTO>(item);
-            else
-                return null!;
-        }
+        public bool GetExpenseByName(string name, long oid = 0)
+            => _context.expenses.AsNoTracking().Any(x => x.Name == name && (oid == 0 || x.OID != oid));
 
         public List<ExpenseTypeDTO> GetExpenseList()
         {

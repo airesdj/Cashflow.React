@@ -132,7 +132,7 @@ const closeAction = () => {
       >
         <Box>
           <Typography component="h1" variant="h4" sx={{ fontWeight: 700 }}>
-            Settings - Account
+            Settings - Accounts
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 0.6 }}>
             Manage your account numbers.
@@ -185,7 +185,7 @@ const closeAction = () => {
       {!loading && data && (
         <>
           <Paper variant="outlined" sx={{ overflow: "hidden" }}>
-            <TableContainer sx={{ maxHeight: "60vh", overflowY: 'auto', overflowX: 'hidden' }}>
+            <TableContainer sx={{ maxHeight: "70vh", overflowY: 'auto', overflowX: 'hidden' }}>
               <Table
                 size="small"
                 stickyHeader
@@ -194,9 +194,9 @@ const closeAction = () => {
               >
                 <TableHead>
                   <TableRow>
-                    <TableCell>Account Name</TableCell>
-                    <TableCell align="right">Currency Type</TableCell>
-                    <TableCell align="right">Actions</TableCell>
+                    <TableCell sx={{ width: "60%" }}>Account Name</TableCell>
+                    <TableCell sx={{ width: "20%" }} align="right">Currency Type</TableCell>
+                    <TableCell sx={{ width: "20%" }} align="right">Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -268,7 +268,7 @@ const closeAction = () => {
             </TableContainer>
 
             {data.totalPages > 1 && (
-              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: 2, p: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: 2, p: 1 }}>
                   <Typography variant="body2" color="text.secondary">
                     Page {data.pageNumber} of {data.totalPages}
                   </Typography>

@@ -2,8 +2,8 @@
 using CashFlow.Core.Models;
 using CashFlow.DataAccess.Entities;
 using CashFlow.DataAccess.Repositories.Base;
-using log4net;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Text;
 
 namespace CashFlow.DataAccess.Repositories
@@ -13,20 +13,13 @@ namespace CashFlow.DataAccess.Repositories
         public long MAIN_REVENUE_SALARY_OID = 12;
         public long MAIN_ACCOUNT_OID = 1;
         private readonly Context _context;
-        public AccountEntityRepository(Context context)
+        public AccountEntityRepository(Context context, ILogger<BaseRepository> logger) : base(logger)
         {
-            Log = LogManager.GetLogger("AccountEntityRepository");
             _context = context;
         }
 
         protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                GC.SuppressFinalize(this);
-                base.Dispose(disposing);
-            }
-        }
+            => base.Dispose(disposing);
 
         public DateTime? GetPeriodStartFromMainSalary()
         {

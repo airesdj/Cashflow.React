@@ -1,7 +1,7 @@
 ﻿using CashFlow.Core.DTO;
 using CashFlow.DataAccess.Repositories.Base;
-using log4net;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -10,20 +10,14 @@ namespace CashFlow.DataAccess.Repositories
     public class UserEntityRepository : BaseRepository
     {
         private readonly Context _context;
-        public UserEntityRepository(Context context)
+        public UserEntityRepository(Context context, ILogger<BaseRepository> logger) : base(logger)
         {
-            Log = LogManager.GetLogger("UserEntityRepository");
             _context = context;
         }
 
         protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                GC.SuppressFinalize(this);
-                base.Dispose(disposing);
-            }
-        }
+            => base.Dispose(disposing);
+
 
         public UserDTO Authentication(string username, string password)
         {

@@ -1,28 +1,22 @@
 ﻿using CashFlow.Core.DTO;
 using CashFlow.DataAccess.Entities;
 using CashFlow.DataAccess.Repositories.Base;
-using log4net;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace CashFlow.DataAccess.Repositories
 {
     public class FixedExpenseEntityRepository : BaseRepository
     {
         private readonly Context _context;
-        public FixedExpenseEntityRepository(Context context)
+        public FixedExpenseEntityRepository(Context context, ILogger<BaseRepository> logger) : base(logger)
         {
-            Log = LogManager.GetLogger("AccountEntityRepository");
             _context = context;
         }
 
         protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                GC.SuppressFinalize(this);
-                base.Dispose(disposing);
-            }
-        }
+            => base.Dispose(disposing);
+
 
         public FixedExpenseDTO GetFixedExpense(long oid)
         {

@@ -1,9 +1,9 @@
 ﻿using CashFlow.Core.DTO;
 using CashFlow.DataAccess.Entities;
 using CashFlow.DataAccess.Repositories.Base;
-using log4net;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using System.Data;
 
 namespace CashFlow.DataAccess.Repositories
@@ -11,20 +11,13 @@ namespace CashFlow.DataAccess.Repositories
     public class AccountPayableEntityRepository : BaseRepository
     {
         private readonly Context _context;
-        public AccountPayableEntityRepository(Context context)
+        public AccountPayableEntityRepository(Context context, ILogger<BaseRepository> logger) : base(logger)
         {
-            Log = LogManager.GetLogger("AccountPayableEntityRepository");
             _context = context;
         }
 
         protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                GC.SuppressFinalize(this);
-                base.Dispose(disposing);
-            }
-        }
+            => base.Dispose(disposing);
 
         public List<AccountPayableDTO> GetAllAccountPayableByDay(DateTime day)
         {

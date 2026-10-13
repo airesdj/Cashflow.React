@@ -71,7 +71,7 @@ namespace CashFlow.React.Server.Controllers
                 var items = list.Item1.OrderByDescending(x => x.DueDate).ThenBy(x => x.Payday).ToArray();
                 var balance = Common.GetBalanceDetailsModel(accountRepo, accountFilter, expenseFilter, 0, fromDate, toDate);
 
-                var pagedItems = items.ToPagedList(page ?? 1, 10);
+                var pagedItems = items.ToPagedList(page ?? 1, Common.TOTAL_ITEMS_PER_PAGE);
 
                 return Ok(new
                 {

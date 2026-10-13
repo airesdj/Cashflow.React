@@ -406,7 +406,7 @@ return (
                         }}
                       >
                         <Typography variant="body2" color="text.secondary">
-                          Marys Payment Balance
+                          Marys Payment Balance in {selectedLabel}
                         </Typography>
 
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>

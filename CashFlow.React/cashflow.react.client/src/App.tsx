@@ -11,6 +11,8 @@ import AccountReceivableFormPage from './receivable/AccountReceivableFormPage';
 import CashflowPage from './cashflow/CashflowPage';
 import SettingsAccountPage from './settings/AccountPage';
 import SettingsAccountFormPage from './settings/AccountFormPage';
+import SettingsExpenseTypePage from './settings/ExpenseTypePage';
+import SettingsExpenseTypeFormPage from './settings/ExpenseTypeFormPage';
 
 function LoginRoute() {
   const { user, login, notice } = useAuth();
@@ -51,7 +53,10 @@ export default function App() {
       <Route path="settings/account/new" element={<SettingsAccountFormPage />} />
       <Route path="settings/account/:id/edit" element={<SettingsAccountFormPage />} />
 
-      <Route path="settings/expense" element={<UpcomingPage title="Expense" />} />
+      <Route path="settings/expense" element={<SettingsExpenseTypePage />} />
+      <Route path="settings/expense/new" element={<SettingsExpenseTypeFormPage />} />
+      <Route path="settings/expense/:id/edit" element={<SettingsExpenseTypeFormPage />} />
+
       <Route path="settings/revenue" element={<UpcomingPage title="Revenue" />} />
       <Route path="settings/fixed-expense" element={<UpcomingPage title="Fixed Expense" />} />
 

@@ -1,7 +1,7 @@
 ﻿using CashFlow.Core.Models;
 using CashFlow.DataAccess.Repositories.Base;
-using log4net;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using static CashFlow.Core.Models.CashFlowModel;
 
 namespace CashFlow.DataAccess.Repositories
@@ -10,21 +10,15 @@ namespace CashFlow.DataAccess.Repositories
     {
         private readonly AccountEntityRepository _accountRepo;
         private readonly Context _context;
-        public CashFlowRepository(Context context, AccountEntityRepository accountRepo)
+        public CashFlowRepository(Context context, AccountEntityRepository accountRepo, ILogger<BaseRepository> logger) : base(logger)
         {
-            Log = LogManager.GetLogger("AccountReceivableEntityRepository");
             _accountRepo = accountRepo;
             _context = context;
         }
 
         protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                GC.SuppressFinalize(this);
-                base.Dispose(disposing);
-            }
-        }
+            => base.Dispose(disposing);
+
 
         public Tuple<List<AccountModel>, CashFlowModel> Get(long acccoundoid, long expensetypetoexcludeoid, DateTime launchstart, DateTime launchend)
         {

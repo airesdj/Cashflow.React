@@ -1,6 +1,7 @@
 using CashFlow.DataAccess;
 using CashFlow.DataAccess.Classes;
 using CashFlow.DataAccess.Repositories;
+using CashFlow.React.Server.Utils;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -107,6 +108,9 @@ foreach (var type in repositoryAssembly.GetTypes()
 
 
 var app = builder.Build();
+
+Common.ConfigureLogger(
+    app.Services.GetRequiredService<ILoggerFactory>());
 
 app.UseDefaultFiles();
 app.UseStaticFiles();

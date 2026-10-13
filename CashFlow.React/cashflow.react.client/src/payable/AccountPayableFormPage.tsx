@@ -217,7 +217,7 @@ function PayableForm({ data, returnUrl, id }: Props) {
                 startAdornment: (
                   <InputAdornment position="start">{currency}</InputAdornment>
                 ),
-              },
+              }
             }}
           />
         </Box>
