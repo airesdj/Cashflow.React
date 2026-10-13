@@ -1,5 +1,5 @@
 import { Box, Stack, Typography } from '@mui/material';
-import type { ExpenseTotal } from '../dashboardTypes';
+import type { ExpenseTotal } from '../dashboard/types';
 import { categoryColour, money } from '../format';
 
 type Props = { items: ExpenseTotal[]; total: number; currency: string };

@@ -4,7 +4,6 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   Paper,
   Skeleton,
   Stack,
@@ -24,7 +23,6 @@ import { loadSettings, SettingsError, writeSettings } from "./api";
 import type { Account, AccountListData } from "./types";
 import { Pagination } from "@mui/material";
 import SettingsActionDialog from "./SettingsActionDialog";
-import type { SettingsAction } from "./SettingsActionDialog";
 
 export default function AccountSettingsPage() {
   const { expire } = useAuth();
@@ -42,7 +40,6 @@ export default function AccountSettingsPage() {
   const [notice, setNotice] = useState(
     (location.state as { message?: string } | null)?.message ?? "",
   );
-  const [action, setAction] = useState<SettingsAction | null>(null);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState("");
   const [unknownOutcome, setUnknownOutcome] = useState(false);
@@ -80,12 +77,6 @@ export default function AccountSettingsPage() {
       });
     return () => controller.abort();
   }, [requestKey, expire]);
-
-  const openAction = (value: SettingsAction) => {
-    setActionError("");
-    setUnknownOutcome(false);
-    setAction(value);
-  };
 
 const closeAction = () => {
   if (busy) return;
@@ -277,7 +268,10 @@ const closeAction = () => {
             </TableContainer>
 
             {data.totalPages > 1 && (
-              <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: 2, p: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Page {data.pageNumber} of {data.totalPages}
+                  </Typography>
                 <Pagination
                   count={data.totalPages}
                   page={data.pageNumber}

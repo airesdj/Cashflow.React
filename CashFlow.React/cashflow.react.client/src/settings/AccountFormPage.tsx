@@ -20,7 +20,6 @@ import {
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/SaveOutlined";
 import { useAuth } from "../AuthContext";
-import { currencyCode } from "../format";
 import { loadSettings, SettingsError, writeSettings } from "./api";
 import type { AccountFormData, AccountSaveInput } from "./types";
 

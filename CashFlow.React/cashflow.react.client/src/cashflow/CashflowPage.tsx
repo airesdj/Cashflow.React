@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -75,9 +75,6 @@ export default function CashflowPage() {
     (item) => item.oid === data.filters.accountOID,
   );
   const currency = currencyCode(account?.currencyType ?? "AUD");
-  const returnQuery = data
-    ? filterParams(data.filters).toString()
-    : params.toString();
 
   return (
     <Box>
@@ -262,7 +259,10 @@ export default function CashflowPage() {
             </TableContainer>
 
             {data.totalPages > 1 && (
-              <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: 2, p: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Page {data.pageNumber} of {data.totalPages}
+                  </Typography>
                 <Pagination
                   count={data.totalPages}
                   page={data.pageNumber}
