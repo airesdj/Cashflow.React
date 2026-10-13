@@ -1,0 +1,115 @@
+name: Build and deploy cash flow
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Get source code
+        uses: actions/checkout@v5
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install client dependencies
+        working-directory: cashflow.react.client
+        run: npm.cmd ci
+
+      - name: Build React and TypeScript
+        working-directory: cashflow.react.client
+        run: npm.cmd run build
+
+      - name: Publish .NET server with built client
+        run: dotnet publish CashFlow.React/CashFlow.React.Server/CashFlow.React.Server.csproj --configuration Release --output "${{ runner.temp }}/cashflow-publish"
+
+      - name: Verify published client exists
+        shell: pwsh
+        run: |
+          $index = Join-Path '${{ runner.temp }}' 'cashflow-publish/wwwroot/index.html'
+          if (!(Test-Path $index)) {
+            throw 'React index.html was not included in the published application.'
+          }
+
+      - name: Upload published application
+        uses: actions/upload-artifact@v4
+        with:
+          name: cashflow-publish
+          path: ${{ runner.temp }}/cashflow-publish
+          if-no-files-found: error
+          retention-days: 3
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 10
+    concurrency:
+      group: cashflow-iis-deployment
+      cancel-in-progress: false
+    steps:
+      - name: Download published application
+        uses: actions/download-artifact@v4
+        with:
+          name: cashflow-publish
+          path: ${{ runner.temp }}/cashflow-deploy-${{ github.run_id }}
+
+      - name: Deploy to IIS and preserve production configuration
+        shell: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "{0}"
+        env:
+          PUBLISH_PATH: ${{ runner.temp }}/cashflow-deploy-${{ github.run_id }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $source = $env:PUBLISH_PATH
+          $destination = 'D:\Infosign_Projects\CashFlow\Live\cashflow.react'
+          $dllName = 'CashFlow.React.Server.dll'
+          $sourceDll = Join-Path $source $dllName
+          $targetDll = Join-Path $destination $dllName
+          $offline = Join-Path $destination 'app_offline.htm'
+
+          if (!(Test-Path $sourceDll)) { throw 'Published server DLL is missing.' }
+          if (!(Test-Path (Join-Path $source 'wwwroot/index.html'))) {
+            throw 'Published React client is missing.'
+          }
+          if (!(Test-Path (Join-Path $destination 'appsettings.json'))) {
+            throw 'Existing IIS appsettings.json is missing. Deployment stopped.'
+          }
+          if (Test-Path $offline) { throw 'Application is already offline. Check IIS before deploying.' }
+
+          # ASP.NET Core IIS hosting stops the application while this file exists.
+          Set-Content -Path $offline -Value '<html><body>Updating Cash Flow. Please refresh shortly.</body></html>' -Encoding UTF8
+          try {
+            Start-Sleep -Seconds 10
+            # Copy without deleting destination files; preserve IIS configuration.
+            & robocopy $source $destination /E /R:12 /W:5 /XF appsettings.json appsettings.Production.json app_offline.htm /NP
+            $copyExitCode = $LASTEXITCODE
+            if ($copyExitCode -ge 8) { throw "Deployment copy failed: robocopy exit code $copyExitCode" }
+            if ((Get-FileHash $sourceDll).Hash -ne (Get-FileHash $targetDll).Hash) {
+              throw 'Deployed DLL does not match the published DLL.'
+            }
+            Write-Host "Deployed commit $env:GITHUB_SHA to $destination"
+            Get-Item $targetDll | Select-Object Name, LastWriteTime, Length
+          }
+          finally {
+            Remove-Item $offline -Force
+          }
+          # Robocopy codes 0 through 7 are successful; reset the process exit code.
+          exit 0
