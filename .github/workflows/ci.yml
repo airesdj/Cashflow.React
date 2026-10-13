@@ -40,7 +40,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Install client dependencies
-        working-directory: cashflow.react.client
+        working-directory: CashFlow.React/cashflow.react.client
         run: npm.cmd ci
 
       - name: Build React and TypeScript
