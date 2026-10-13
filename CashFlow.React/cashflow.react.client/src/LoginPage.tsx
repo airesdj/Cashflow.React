@@ -177,7 +177,7 @@ return (
                 color="text.secondary"
                 sx={{ mt: 3, textAlign: 'center' }}
               >
-                CashFlow · Your finances, in one place.
+                Cash Flow · Your finances in one place.
               </Typography>
             </Box>
           </Box>
