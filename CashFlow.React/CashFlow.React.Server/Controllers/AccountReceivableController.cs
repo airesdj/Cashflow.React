@@ -229,7 +229,7 @@ namespace CashFlow.React.Server.Controllers
             {
                 DueDate = now.Date,
                 Payday = now.Date,
-                RevenueTypeOID = Common.RECEIVABLE_MARY_PAYMENT_OID,
+                RevenueTypeOID = revenueTypeOID,
                 AccountValue = AppConfig.Settings_ReceivableMarysPaymentValue,
                 Description = null!,
                 AccountOID = accountOID,

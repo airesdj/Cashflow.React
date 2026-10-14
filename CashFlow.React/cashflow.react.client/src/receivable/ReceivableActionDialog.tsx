@@ -50,7 +50,7 @@ export default function ReceivableActionDialog({
       ? "Delete"
       : action.type === "maryPayment" ||
         action.type === "airesPayment"
-        ? "Add payment"
+        ? "Add receivable"
             : action.item.payday
                 ? "Mark unpaid"
                 : "Pay";
@@ -73,7 +73,7 @@ export default function ReceivableActionDialog({
           <>
             <Typography>
               Are you sure you wish to launch{" "}
-              {action.type === "maryPayment" ? "Mary’s" : "Aires’s"} payment
+              {action.type === "maryPayment" ? "Marys’" : "Aires’s"} payment
               for today?
             </Typography>
 
@@ -82,21 +82,23 @@ export default function ReceivableActionDialog({
             </Typography>
 
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              This uses the configured payment amount for{" "}
-              {action.type === "maryPayment" ? "Mary" : "Aires"}.
+              This uses the configured the amount of {" "}
+              {action.type === "maryPayment" ? "Marys'" : "Aires's"}.
+              payment
+
             </Typography>
           </>
         ) : (
             <>
             <Typography>
               {action.type === "delete"
-                ? "Are you sure you want to delete this revenue?"
+                ? "Are you sure you want to delete this receivable?"
                 : action.item.payday
-                  ? "Cancel the payment and mark this revenue as unpaid?"
-                  : "Mark this revenue as paid today?"}
+                  ? "Cancel the payment and mark this receivable as unpaid?"
+                  : "Mark this receivable as paid today?"}
             </Typography>
             <Typography sx={{ mt: 2, fontWeight: 600 }}>
-              {action.item.description || "Revenue"}
+              {action.item.description || "Receivable"}
             </Typography>
             <Typography color="text.secondary">
               Due {dateLabel(action.item.dueDate)} ·{" "}
