@@ -29,7 +29,7 @@ namespace CashFlow.React.Server.Controllers
         }
 
         [HttpGet]
-        public IActionResult Get([FromQuery] string? mes_ano)
+        public async Task<IActionResult> Get([FromQuery] string? mes_ano)
         {
             try
             {
@@ -50,14 +50,17 @@ namespace CashFlow.React.Server.Controllers
                 var month = selectedMonth.Month;
                 var year = selectedMonth.Year;
                 // Sequential calls: the repositories may share the same scoped EF DbContext.
-                var balances = accountRepo.GetAllAccountBalance(month, year)?.ToList() ?? [];
-                var dailyPayments = payableRepo.GetAllAccountPayableByDay(today)?.ToList() ?? [];
-                var fixedExpenses = fixedRepo.GetAllExpenseTypeTotal()?.OrderByDescending(x => x.EstimatedValue).ThenBy(x => x.Name).ToList() ?? [];
+                var balances = await accountRepo.GetAllAccountBalance(month, year) ?? [];
+                var dailyPayments = await payableRepo.GetAllAccountPayableByDay(today) ?? [];
+                var fixedExpenses = (await fixedRepo.GetAllExpenseTypeTotal())?
+                                        .OrderByDescending(x => x.EstimatedValue).ThenBy(x => x.Name).ToList() ?? [];
                 // Preserve the original account argument (1) and excluded expense type (12).
-                var monthlyExpenses = payableRepo.GetAllExpenseTotalByMonth(1, month, year)?
-                    .Where(x => x.OID != 12).OrderByDescending(x => x.EstimatedValue).ThenBy(x => x.Name).ToList() ?? [];
-                var totalTransfer = accountRepo.GetAccountTotalTransferToSaver(month, year);
-                var marysBalance = accountRepo.GetAccountTotalTransferMaryPayment(month, year);
+                var monthlyExpenses = (await payableRepo.GetAllExpenseTotalByMonth(1, month, year))?
+                                            .Where(x => x.OID != 12)
+                                            .OrderByDescending(x => x.EstimatedValue).ThenBy(x => x.Name).ToList() ?? [];
+
+                var totalTransfer = await accountRepo.GetAccountTotalTransferToSaver(month, year);
+                var marysBalance = await accountRepo.GetAccountTotalTransferMaryPayment(month, year);
 
                 var totals = balances.GroupBy(x => NormalizeCurrency(x.CurrencyType)).Select(group => new
                 {

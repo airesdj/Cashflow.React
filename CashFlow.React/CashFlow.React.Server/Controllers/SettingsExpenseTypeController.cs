@@ -23,9 +23,9 @@ namespace CashFlow.React.Server.Controllers
             this.logger = logger;
         }
 
-        private IActionResult Execute(Func<IActionResult> action, bool write = false)
+        private async Task<IActionResult> Execute(Func<Task<IActionResult>> action, bool write = false)
         {
-            try { return action(); }
+            try { return await action(); }
             catch (Exception exception)
             {
                 logger.LogError(exception, "Expense type request failed: {Method} {Path}", Request.Method, Request.Path);
@@ -38,9 +38,9 @@ namespace CashFlow.React.Server.Controllers
         }
 
         [HttpGet]
-        public IActionResult List([FromQuery] int? page) => Execute(() =>
+        public Task<IActionResult> List([FromQuery] int? page) => Execute(async () =>
         {
-            var pagedItems = expenseRepo.GetExpenseList().ToPagedList(page ?? 1, Common.TOTAL_ITEMS_PER_PAGE);
+            var pagedItems = (await expenseRepo.GetExpenseList()).ToPagedList(page ?? 1, Common.TOTAL_ITEMS_PER_PAGE);
 
             return Ok(new
             {
@@ -53,18 +53,16 @@ namespace CashFlow.React.Server.Controllers
         });
 
         [HttpGet("Form")]
-        public IActionResult Form() => Execute(() =>
+        public IActionResult Form() => Ok(new
         {
-            return Ok(new
-            {
-                item = (ExpenseTypeDTO?)null
-            });
+            item = (AccountDTO?)null
         });
 
+
         [HttpGet("{id:int:min(1)}")]
-        public IActionResult Get(int id) => Execute(() =>
+        public Task<IActionResult> Get(int id) => Execute(async () =>
         {
-            var item = expenseRepo.GetExpense(id);
+            var item = await expenseRepo.GetExpense(id);
             if (item is null) return NotFound(new { message = "This expense type no longer exists." });
             return Ok(new
             {
@@ -73,12 +71,12 @@ namespace CashFlow.React.Server.Controllers
         });
 
         [HttpPost]
-        public IActionResult Create([FromBody] ExpenseTypeDTO input) => Execute(() =>
+        public Task<IActionResult> Create([FromBody] ExpenseTypeDTO input) => Execute(async () =>
         {
-            if (!ValidateInput(input)) return ValidationProblem(ModelState);
+            if (!await ValidateInput(input)) return ValidationProblem(ModelState);
 
             var now = Common.LocalNow;
-            var id = expenseRepo.Add(input);
+            var id = await expenseRepo.Add(input);
 
             if (id <= 0) return StatusCode(500, new { message = "This expense type was not added." });
             return CreatedAtAction(nameof(Get), new { id }, new { oid = id, message = "Expense type added successfully." });
@@ -86,32 +84,32 @@ namespace CashFlow.React.Server.Controllers
 
 
         [HttpPut("{id:int:min(1)}")]
-        public IActionResult Edit(int id, [FromBody] ExpenseTypeDTO input) => Execute(() =>
+        public Task<IActionResult> Edit(int id, [FromBody] ExpenseTypeDTO input) => Execute(async () =>
         {
-            if (!ValidateInput(input)) return ValidationProblem(ModelState);
+            if (!await ValidateInput(input)) return ValidationProblem(ModelState);
 
             var model = expenseRepo.GetExpense(id);
             if (model is null) return NotFound(new { message = "This expense type no longer exists." });
 
-            if (!expenseRepo.Update(input)) return StatusCode(500, new { message = "This expense type was not updated." });
+            if (!await expenseRepo.Update(input)) return StatusCode(500, new { message = "This expense type was not updated." });
             return Ok(new { message = "Expense type updated successfully." });
         }, write: true);
 
 
         [HttpDelete("{id:int:min(1)}")]
-        public IActionResult Delete(int id) => Execute(() =>
+        public Task<IActionResult> Delete(int id) => Execute(async () =>
         {
-            if (expenseRepo.GetExpense(id) is null) return NotFound(new { message = "This expense type no longer exists." });
-            expenseRepo.Delete(id);
+            if (await expenseRepo.GetExpense(id) is null) return NotFound(new { message = "This expense type no longer exists." });
+            await expenseRepo.Delete(id);
             return Ok(new { message = "Expense type deleted successfully." });
         }, write: true);
 
 
-        private bool ValidateInput(ExpenseTypeDTO input)
+        private async Task<bool> ValidateInput(ExpenseTypeDTO input)
         {
             if (string.IsNullOrWhiteSpace(input.Name))
                 ModelState.AddModelError(nameof(input.Name), "Expense type name is required.");
-            if (expenseRepo.GetExpenseByName(input.Name, input.OID))
+            if (await expenseRepo.GetExpenseByName(input.Name, input.OID))
                 ModelState.AddModelError(nameof(input.Name), "Expense type name already exists.");
             if (input.EstimatedValue < 0)
                 ModelState.AddModelError(nameof(input.EstimatedValue), "Value must be positive.");

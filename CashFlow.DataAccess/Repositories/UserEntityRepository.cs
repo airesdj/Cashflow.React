@@ -19,15 +19,17 @@ namespace CashFlow.DataAccess.Repositories
             => base.Dispose(disposing);
 
 
-        public UserDTO Authentication(string username, string password)
+        public async Task<UserDTO> Authentication(string username, string password)
         {
             try
             {
                 string encPassword = EncryptSha256(password);
 
-                return mapperFactory.getMapper().Map<UserDTO>(_context.users.AsNoTracking()
-                                                                       .FirstOrDefault(x => x.UserName.ToLower() == username.ToLower() &&
-                                                                                            x.Password == encPassword));
+                var entity = await _context.users.AsNoTracking()
+                                           .FirstOrDefaultAsync(x => x.UserName.ToLower() == username.ToLower() &&
+                                                                x.Password == encPassword);
+
+                return mapperFactory.getMapper().Map<UserDTO>(entity);
             }
             catch (Exception ex)
             {

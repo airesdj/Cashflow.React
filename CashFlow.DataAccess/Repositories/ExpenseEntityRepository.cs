@@ -18,11 +18,12 @@ namespace CashFlow.DataAccess.Repositories
             => base.Dispose(disposing);
 
 
-        public ExpenseTypeDTO GetExpense(long oid)
+        public async Task<ExpenseTypeDTO> GetExpense(long oid)
         {
             try
             {
-                return mapperFactory.getMapper().Map<ExpenseTypeDTO>(_context.expenses.AsNoTracking().FirstOrDefault(x => x.OID == oid));
+                var enity = await _context.expenses.AsNoTracking().FirstOrDefaultAsync(x => x.OID == oid);
+                return mapperFactory.getMapper().Map<ExpenseTypeDTO>(enity);
             }
             catch (Exception ex)
             {
@@ -31,16 +32,14 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public bool GetExpenseByName(string name, long oid = 0)
-            => _context.expenses.AsNoTracking().Any(x => x.Name == name && (oid == 0 || x.OID != oid));
+        public Task<bool> GetExpenseByName(string name, long oid = 0)
+            => _context.expenses.AsNoTracking().AnyAsync(x => x.Name == name && (oid == 0 || x.OID != oid));
 
-        public List<ExpenseTypeDTO> GetExpenseList()
+        public async Task<List<ExpenseTypeDTO>> GetExpenseList()
         {
             try
             {
-                List<ExpenseTypeDTO> list = new List<ExpenseTypeDTO>();
-
-                list = _context.expenses.AsNoTracking()
+                var list = await _context.expenses.AsNoTracking()
                         .Select(o => new ExpenseTypeDTO
                         {
                             OID = o.OID,
@@ -48,7 +47,7 @@ namespace CashFlow.DataAccess.Repositories
                             EstimatedValue = o.EstimatedValue ?? 0
                         })
                         .OrderBy(o => o.Name)
-                        .ToList();
+                        .ToListAsync();
 
                 return list;
             }
@@ -59,7 +58,7 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public long Add(ExpenseTypeDTO model)
+        public async Task<long> Add(ExpenseTypeDTO model)
         {
             try
             {
@@ -71,7 +70,7 @@ namespace CashFlow.DataAccess.Repositories
                 };
 
                 _context.expenses.Add(item);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 id = item.OID;
 
                 return id;
@@ -83,53 +82,37 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public bool Delete(long oid)
+        public async Task<bool> Delete(long oid)
         {
-            ExpenseTypeEntity? expense = null;
             try
             {
-                expense = _context.expenses.FirstOrDefault(o => o.OID == oid);
-                if (expense != null)
-                {
-                    _context.expenses.Attach(expense);
-                    _context.expenses.Remove(expense);
-                    _context.SaveChanges();
-                }
+                var deleted = await _context.expenses
+                                    .Where(a => a.OID == oid)
+                                    .ExecuteDeleteAsync();
 
-                return true;
+                return deleted > 0 ? true : false;
             }
             catch (Exception ex)
             {
                 Log.Error(ex);
                 return false;
             }
-            finally
-            {
-                expense = null;
-            }
         }
 
-        public bool Update(ExpenseTypeDTO model)
+        public async Task<bool> Update(ExpenseTypeDTO model)
         {
             try
             {
-                bool ret = false;
+                var updated = await _context.expenses
+                                .Where(x => x.OID == model.OID)
+                                .ExecuteUpdateAsync(updates => updates
+                                    .SetProperty(h => h.Name, _ => model.Name)
+                                    .SetProperty(h => h.EstimatedValue, _ => model.EstimatedValue));
 
-                var expense = _context.expenses.FirstOrDefault(x => x.OID == model.OID);
-                if (expense != null)
-                {
-                    expense.Name = model.Name;
-                    expense.EstimatedValue = model.EstimatedValue;
-
-                    _context.Entry(expense).State = EntityState.Modified;
-                    _context.SaveChanges();
-
-                    ret = true;
-                }
-                else
+                if (updated == 0)
                     Log.Error("Expense NOT found.");
 
-                return ret;
+                return updated > 0 ? true : false;
             }
             catch (Exception ex)
             {

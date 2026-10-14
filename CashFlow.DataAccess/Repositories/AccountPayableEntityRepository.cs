@@ -19,29 +19,29 @@ namespace CashFlow.DataAccess.Repositories
         protected override void Dispose(bool disposing)
             => base.Dispose(disposing);
 
-        public List<AccountPayableDTO> GetAllAccountPayableByDay(DateTime day)
+        public async Task<List<AccountPayableDTO>> GetAllAccountPayableByDay(DateTime day)
         {
             try
             {
                 List<AccountPayableDTO> list = new List<AccountPayableDTO>();
 
-                list = (from a in _context.accountspayable.AsNoTracking()
-                        join e in _context.expenses.AsNoTracking() on a.ExpenseTypeOID equals e.OID
-                        where a.DueDate == day
-                        select new AccountPayableDTO()
-                        {
-                            OID = a.OID,
-                            AccountOID = a.AccountOID,
-                            DueDate = day,
-                            Description = e.Name,
-                            ExpenseTypeOID = a.ExpenseTypeOID,
-                            Payday = a.Payday,
-                            AccountValue = a.AccountValue,
-                            CreatedBy = a.CreatedBy,
-                            CreatedDate = a.CreatedDate,
-                            UpdatedBy = a.UpdatedBy,
-                            UpdatedDate = a.UpdatedDate
-                        }).ToList();
+                list = await (from a in _context.accountspayable.AsNoTracking()
+                               join e in _context.expenses.AsNoTracking() on a.ExpenseTypeOID equals e.OID
+                                where a.DueDate == day
+                                select new AccountPayableDTO()
+                                {
+                                    OID = a.OID,
+                                    AccountOID = a.AccountOID,
+                                    DueDate = day,
+                                    Description = e.Name,
+                                    ExpenseTypeOID = a.ExpenseTypeOID,
+                                    Payday = a.Payday,
+                                    AccountValue = a.AccountValue,
+                                    CreatedBy = a.CreatedBy,
+                                    CreatedDate = a.CreatedDate,
+                                    UpdatedBy = a.UpdatedBy,
+                                    UpdatedDate = a.UpdatedDate
+                                }).ToListAsync();
 
                 return list;
             }
@@ -52,11 +52,12 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public AccountPayableDTO GetAccount(long oid)
+        public async Task<AccountPayableDTO> GetAccount(long oid)
         {
             try
             {
-                return mapperFactory.getMapper().Map<AccountPayableDTO>(_context.accountspayable.AsNoTracking().FirstOrDefault(x => x.OID == oid));
+                var account = await _context.accountspayable.AsNoTracking().FirstOrDefaultAsync(x => x.OID == oid);
+                return mapperFactory.getMapper().Map<AccountPayableDTO>(account);
             }
             catch (Exception ex)
             {
@@ -65,28 +66,31 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public List<AccountPayableDTO> GetAccountList(long acccoundoid, long expensetypeoid, DateTime start, DateTime end)
+        public async Task<List<AccountPayableDTO>> GetAccountList(long acccoundoid, long expensetypeoid, DateTime start, DateTime end)
         {
             try
             {
-                List<AccountPayableDTO> list = new List<AccountPayableDTO>();
+                AccountPayableEntity[] accounts;
 
                 if (expensetypeoid == 0)
                 {
-                    _context.accountspayable.AsNoTracking()
+                    accounts = await _context.accountspayable.AsNoTracking()
                                        .Where(x => x.AccountOID == acccoundoid && x.DueDate >= start && x.DueDate <= end)
-                                       .ToList()
-                                       .ForEach(account => list.Add(mapperFactory.getMapper().Map<AccountPayableDTO>(account)));
+                                       .ToArrayAsync();
                 }
                 else
                 {
-                    _context.accountspayable.AsNoTracking()
+                    accounts = await _context.accountspayable.AsNoTracking()
                                        .Where(x => x.AccountOID == acccoundoid && x.ExpenseTypeOID == expensetypeoid && x.DueDate >= start && x.DueDate <= end)
-                                       .ToList()
-                                       .ForEach(account => list.Add(mapperFactory.getMapper().Map<AccountPayableDTO>(account)));
+                                       .ToArrayAsync();
                 }
 
-                return list.OrderBy(x => x.DueDate).ThenBy(x => x.Payday).ToList();
+                var mapper = mapperFactory.getMapper();
+                return accounts
+                    .Select(item => mapper.Map<AccountPayableDTO>(item))
+                    .OrderBy(x => x.DueDate)
+                    .ThenBy(x => x.Payday)
+                    .ToList();
             }
             catch (Exception ex)
             {
@@ -95,7 +99,7 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public long Add(AccountPayableDTO model)
+        public async Task<long> Add(AccountPayableDTO model)
         {
             try
             {
@@ -113,7 +117,7 @@ namespace CashFlow.DataAccess.Repositories
                 };
 
                 _context.accountspayable.Add(item);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 id = item.OID;
 
                 return id;
@@ -125,9 +129,9 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public bool Add(List<AccountPayableDTO> list)
+        public async Task<bool> Add(List<AccountPayableDTO> list)
         {
-            using (IDbContextTransaction dbTransaction = _context.Database.BeginTransaction(IsolationLevel.RepeatableRead))
+            using (IDbContextTransaction dbTransaction = await _context.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead))
             {
                 try
                 {
@@ -146,55 +150,45 @@ namespace CashFlow.DataAccess.Repositories
                         };
 
                         _context.accountspayable.Add(item);
-                        _context.SaveChanges();
+                        await _context.SaveChangesAsync();
                     }
 
-                    dbTransaction.Commit();
+                    await dbTransaction.CommitAsync();
                     return true;
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex);
-                    dbTransaction.Rollback();
+                    await dbTransaction.RollbackAsync();
                     return false;
                 }
             }
         }
 
-        public bool Delete(long oid)
+        public async Task<bool> Delete(long oid)
         {
-            AccountPayableEntity? account = null;
-
             try
             {
-                account = _context.accountspayable.FirstOrDefault(x => x.OID == oid);
-                if (account != null)
-                {
-                    _context.accountspayable.Attach(account);
-                    _context.accountspayable.Remove(account);
-                    _context.SaveChanges();
-                }
+                var deleted = await _context.accountspayable
+                                    .Where(a => a.OID == oid)
+                                    .ExecuteDeleteAsync();
 
-                return true;
+                return deleted > 0 ? true : false;
             }
             catch (Exception ex)
             {
                 Log.Error(ex);
                 return false;
             }
-            finally
-            {
-                account = null;
-            }
         }
 
-        public bool Update(AccountPayableDTO model)
+        public async Task<bool> Update(AccountPayableDTO model)
         {
             try
             {
                 bool ret = false;
 
-                var account = _context.accountspayable.FirstOrDefault(x => x.OID == model.OID);
+                var account = await _context.accountspayable.FirstOrDefaultAsync(x => x.OID == model.OID);
                 if (account != null)
                 {
                     account.AccountOID = model.AccountOID;
@@ -206,8 +200,7 @@ namespace CashFlow.DataAccess.Repositories
                     account.UpdatedBy = model.UpdatedBy;
                     account.UpdatedDate = model.UpdatedDate;
 
-                    _context.Entry(account).State = EntityState.Modified;
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
                     ret = true;
                 }
@@ -223,13 +216,15 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public bool InsertFromDataSet(string[] lines, string username, long accountOID, DateTime dateFrom, DateTime dateTo)
+        public async Task<bool> InsertFromDataSet(string[] lines, string username, long accountOID, DateTime dateFrom, DateTime dateTo)
         {
             if (lines != null)
             {
-                List<AccountPayableEntity> payable_list = _context.accountspayable.Where(x => x.AccountOID == accountOID && x.DueDate >= dateFrom && x.DueDate <= dateTo).ToList();
+                var payable_list = await _context.accountspayable.Where(x => x.AccountOID == accountOID && 
+                                                                                                    x.DueDate >= dateFrom && x.DueDate <= dateTo)
+                                                                    .ToListAsync();
 
-                using (IDbContextTransaction dbTransaction = _context.Database.BeginTransaction(IsolationLevel.ReadCommitted))
+                using (IDbContextTransaction dbTransaction = await _context.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted))
                 {
                     try
                     {
@@ -261,8 +256,7 @@ namespace CashFlow.DataAccess.Repositories
                                         result.Item2.UpdatedBy = username;
                                         result.Item2.UpdatedDate = DateTime.Now;
 
-                                        _context.Entry(result.Item2).State = EntityState.Modified;
-                                        _context.SaveChanges();
+                                        await _context.SaveChangesAsync();
                                     }
                                     else
                                     {
@@ -279,7 +273,7 @@ namespace CashFlow.DataAccess.Repositories
                                         };
 
                                         _context.accountspayable.Add(item);
-                                        _context.SaveChanges();
+                                        await _context.SaveChangesAsync();
                                     }
                                 }
                             }
@@ -287,14 +281,14 @@ namespace CashFlow.DataAccess.Repositories
                         }
 
                         // Save Rows
-                        _context.SaveChanges();
-                        dbTransaction.Commit();
+                        await _context.SaveChangesAsync();
+                        await dbTransaction.CommitAsync();
 
                         return true;
                     }
                     catch (Exception ex)
                     {
-                        dbTransaction.Rollback();
+                        await dbTransaction.RollbackAsync();
                         Log.Error(ex);
                         return false;
                     }
@@ -304,7 +298,8 @@ namespace CashFlow.DataAccess.Repositories
                 return false;
         }
 
-        private Tuple<bool, AccountPayableEntity, long> LaunchValid(List<AccountPayableEntity> payable_list, DateTime import_date, decimal import_value, string import_desc, DateTime from)
+        private Tuple<bool, AccountPayableEntity, long> LaunchValid(List<AccountPayableEntity> payable_list, DateTime import_date, 
+                                                                    decimal import_value, string import_desc, DateTime from)
         {
             const long EXPENSES_EXTRAS = 9;
             try
@@ -369,7 +364,7 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public List<ExpenseTypeDTO> GetAllExpenseTotalByMonth(long accountoid, int month, int year)
+        public async Task<List<ExpenseTypeDTO>> GetAllExpenseTotalByMonth(long accountoid, int month, int year)
         {
             try
             {
@@ -380,53 +375,65 @@ namespace CashFlow.DataAccess.Repositories
                 var accounts = new long[] { 1, 5, 7, 8 };
                 var expenses_oids = new long[] { 1, 42, 52 };
 
-                var accountspay = _context.accountspayable.AsNoTracking()
-                                                    .Where(e => e.AccountOID == accountoid && e.DueDate >= from && e.DueDate <= to && e.Payday != null);
+                var accountspay = await _context.accountspayable.AsNoTracking()
+                                                    .Where(e => e.AccountOID == accountoid && e.DueDate >= from && e.DueDate <= to && e.Payday != null)
+                                                    .ToArrayAsync();
 
-                var accountrepayment_wa = _context.accountspayable.AsNoTracking()
-                                                    .Where(e => accounts.Contains(e.AccountOID) && e.DueDate >= from && e.DueDate <= to && e.Payday != null && e.ExpenseTypeOID == 41);
+                var accountrepayment_wa = await _context.accountspayable.AsNoTracking()
+                                                    .Where(e => accounts.Contains(e.AccountOID) && e.DueDate >= from && e.DueDate <= to && e.Payday != null && e.ExpenseTypeOID == 41)
+                                                    .ToArrayAsync();
 
-                var accountrepayment_wa_loan = _context.accountspayable.AsNoTracking()
+                var accountrepayment_wa_loan = await _context.accountspayable.AsNoTracking()
                                                     .Where(e => accounts.Contains(e.AccountOID) && e.DueDate >= from && e.DueDate <= to && e.Payday != null && e.ExpenseTypeOID == 42)
-                                                    .FirstOrDefault();
+                                                    .FirstOrDefaultAsync();
 
-                var accountrepayment_qld = _context.accountspayable.AsNoTracking()
-                                                    .Where(e => accounts.Contains(e.AccountOID) && e.DueDate >= from && e.DueDate <= to && e.Payday != null && e.ExpenseTypeOID == 53);
+                var accountrepayment_qld = await _context.accountspayable.AsNoTracking()
+                                                    .Where(e => accounts.Contains(e.AccountOID) && e.DueDate >= from && e.DueDate <= to && e.Payday != null && e.ExpenseTypeOID == 53)
+                                                    .ToArrayAsync();
 
-                var accountrepayment_qld_loan = _context.accountspayable.AsNoTracking()
+                var accountrepayment_qld_loan = await _context.accountspayable.AsNoTracking()
                                                     .Where(e => accounts.Contains(e.AccountOID) && e.DueDate >= from && e.DueDate <= to && e.Payday != null && e.ExpenseTypeOID == 52)
-                                                    .FirstOrDefault();
+                                                    .FirstOrDefaultAsync();
 
-                var accountproprent = _context.accountspayable.AsNoTracking()
+                var accountproprent = await _context.accountspayable.AsNoTracking()
                                                     .Where(e => accounts.Contains(e.AccountOID) && e.DueDate >= from && e.DueDate <= to && e.Payday != null && e.ExpenseTypeOID == 1)
-                                                    .ToList();
+                                                    .ToArrayAsync();
 
-                list.AddRange((from f in _context.expenses.AsNoTracking()
-                               join e in accountspay on f.OID equals e.ExpenseTypeOID
-                               group e by new { f.Name, f.OID } into g
-                               select new ExpenseTypeDTO { OID = g.Key.OID, Name = g.Key.Name, EstimatedValue = g.Sum(p => p.AccountValue) })
-                               .ToList().Where(x => x.EstimatedValue > 0).ToList());
+                var expenses_entity = await _context.expenses.AsNoTracking().ToArrayAsync();
+
+                var expensesdto = (from f in expenses_entity
+                                         join e in accountspay on f.OID equals e.ExpenseTypeOID
+                                      group e by new { f.Name, f.OID } into g
+                                      select new ExpenseTypeDTO { OID = g.Key.OID, Name = g.Key.Name, EstimatedValue = g.Sum(p => p.AccountValue) })
+                               .ToArray();
+
+                list.AddRange(expensesdto.Where(x => x.EstimatedValue > 0));
 
                 if (accountrepayment_wa?.Any() ?? false)
                 {
-                    list.AddRange((from f in _context.expenses.AsNoTracking()
-                                   join e in accountrepayment_wa on f.OID equals e.ExpenseTypeOID
-                                   group e by new { f.Name, f.OID } into g
-                                   select new ExpenseTypeDTO { OID = g.Key.OID, Name = g.Key.Name, EstimatedValue = g.Sum(p => p.AccountValue) })
-                                   .ToList().Where(x => x.EstimatedValue > 0).ToList());
+                    expensesdto = (from f in expenses_entity
+                                      join e in accountrepayment_wa on f.OID equals e.ExpenseTypeOID
+                                      group e by new { f.Name, f.OID } into g
+                                      select new ExpenseTypeDTO { OID = g.Key.OID, Name = g.Key.Name, EstimatedValue = g.Sum(p => p.AccountValue) })
+                                   .ToArray();
+
+                    list.AddRange(expensesdto.Where(x => x.EstimatedValue > 0));
                 }
 
                 if (accountrepayment_qld?.Any() ?? false)
                 {
-                    list.AddRange((from f in _context.expenses.AsNoTracking()
-                                   join e in accountrepayment_qld on f.OID equals e.ExpenseTypeOID
-                                   group e by new { f.Name, f.OID } into g
-                                   select new ExpenseTypeDTO { OID = g.Key.OID, Name = g.Key.Name, EstimatedValue = g.Sum(p => p.AccountValue) })
-                                   .ToList().Where(x => x.EstimatedValue > 0).ToList());
+                    expensesdto = (from f in expenses_entity
+                                         join e in accountrepayment_qld on f.OID equals e.ExpenseTypeOID
+                                        group e by new { f.Name, f.OID } into g
+                                        select new ExpenseTypeDTO { OID = g.Key.OID, Name = g.Key.Name, EstimatedValue = g.Sum(p => p.AccountValue) })
+                                   .ToArray();
+
+                    list.AddRange(expensesdto.Where(x => x.EstimatedValue > 0));
                 }
 
-                var expenses = _context.expenses.Where(x => expenses_oids.Contains(x.OID))
-                                                .Select(x => new { x.OID, x.Name }).ToArray();
+                var expenses = expenses_entity.Where(x => expenses_oids.Contains(x.OID))
+                                              .Select(x => new { x.OID, x.Name })
+                                              .ToArray();
 
                 if (accountrepayment_wa_loan != null)
                 {
@@ -448,7 +455,7 @@ namespace CashFlow.DataAccess.Repositories
                     });
                 }
 
-                if (accountproprent?.Count > 0)
+                if (accountproprent?.Length > 0)
                 {
                     var total_value = accountproprent.Sum(qld => qld.AccountValue);
 

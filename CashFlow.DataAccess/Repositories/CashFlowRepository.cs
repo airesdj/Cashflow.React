@@ -20,57 +20,78 @@ namespace CashFlow.DataAccess.Repositories
             => base.Dispose(disposing);
 
 
-        public Tuple<List<AccountModel>, CashFlowModel> Get(long acccoundoid, long expensetypetoexcludeoid, DateTime launchstart, DateTime launchend)
+        public async Task<Tuple<List<AccountModel>, CashFlowModel>> Get(long acccoundoid, long expensetypetoexcludeoid, 
+                                                                        DateTime launchstart, DateTime launchend)
         {
             try
             {
                 CashFlowModel model = new CashFlowModel();
-                model.PreviousBalance = _accountRepo.GetAccountPreviousBalance(acccoundoid, launchstart);
-                model.FinalBalance = _accountRepo.GetAccountFinalBalance(acccoundoid, launchend);
+                model.PreviousBalance = await _accountRepo.GetAccountPreviousBalance(acccoundoid, launchstart);
+                model.FinalBalance = await _accountRepo.GetAccountFinalBalance(acccoundoid, launchend);
 
-                var total = _accountRepo.GetAccountTotalForPeriod(acccoundoid, expensetypetoexcludeoid, 0, 0, launchstart, launchend);
+                var total = await _accountRepo.GetAccountTotalForPeriod(acccoundoid, expensetypetoexcludeoid, 0, 0, launchstart, launchend);
 
                 model.TotalExpenses = total.Item1;
                 model.TotalRevenues = total.Item2;
 
                 List<AccountModel> list = new List<AccountModel>();
 
-                string currencytype = _context.accounts.AsNoTracking().Where(x => x.OID == acccoundoid).Select(x => x.CurrencyType).FirstOrDefault()!;
+                string? currencytype = await _context.accounts.AsNoTracking().Where(x => x.OID == acccoundoid)
+                                                .Select(x => x.CurrencyType).FirstOrDefaultAsync();
                 string desc = string.Empty;
 
-                var listRev = _context.revenues.AsNoTracking().OrderBy(x => x.OID).ToList();
-                var listExp = _context.expenses.AsNoTracking().OrderBy(x => x.OID).ToList();
+                var listRev = await _context.revenues.AsNoTracking().OrderBy(x => x.OID).ToArrayAsync();
+                var listExp = await _context.expenses.AsNoTracking().OrderBy(x => x.OID).ToArrayAsync();
 
-                _context.accountsreceivable.AsNoTracking()
+
+                var accountsR = await _context.accountsreceivable.AsNoTracking()
                                       .Where(x => x.AccountOID == acccoundoid && x.DueDate >= launchstart && x.DueDate <= launchend)
-                                      .ToList()
-                                      .ForEach(account =>
-                                      {
-                                          desc = listRev.FirstOrDefault(x => x.OID == account.RevenueTypeOID)?.Name!;
-                                          list.Add(new AccountModel() { AccountOID = acccoundoid, AccountValue = account.AccountValue ?? 0, DueDate = account.DueDate, Payday = account.Payday, CurrencyType = currencytype, Description = $"{desc} - {account.Description}", LaunchType = "REVENUE" });
-                                      });
+                                      .ToArrayAsync();
+
+                list.AddRange(accountsR.Select(account => new AccountModel()
+                {
+                    AccountOID = acccoundoid,
+                    AccountValue = account.AccountValue ?? 0,
+                    DueDate = account.DueDate,
+                    Payday = account.Payday,
+                    CurrencyType = currencytype ?? "$",
+                    Description = $"{listRev.FirstOrDefault(x => x.OID == account.RevenueTypeOID)?.Name} - {account.Description}",
+                    LaunchType = "REVENUE"
+                }).ToArray());
 
                 if (expensetypetoexcludeoid == 0)
                 {
-                    _context.accountspayable.AsNoTracking()
-                                       .Where(x => x.AccountOID == acccoundoid && x.DueDate >= launchstart && x.DueDate <= launchend)
-                                       .ToList()
-                                       .ForEach(account =>
-                                       {
-                                           desc = listExp.FirstOrDefault(x => x.OID == account.ExpenseTypeOID)?.Name!;
-                                           list.Add(new AccountModel() { AccountOID = acccoundoid, AccountValue = account.AccountValue, DueDate = account.DueDate, Payday = account.Payday, CurrencyType = currencytype, Description = $"{desc} - {account.Description}", LaunchType = "EXPENSE" });
-                                       });
+                    var accountsP = await _context.accountspayable.AsNoTracking()
+                                          .Where(x => x.AccountOID == acccoundoid && x.DueDate >= launchstart && x.DueDate <= launchend)
+                                          .ToArrayAsync();
+
+                    list.AddRange(accountsP.Select(account => new AccountModel()
+                    {
+                        AccountOID = acccoundoid,
+                        AccountValue = account.AccountValue,
+                        DueDate = account.DueDate,
+                        Payday = account.Payday,
+                        CurrencyType = currencytype ?? "$",
+                        Description = $"{listExp.FirstOrDefault(x => x.OID == account.ExpenseTypeOID)?.Name} - {account.Description}",
+                        LaunchType = "EXPENSE"
+                    }).ToArray());
                 }
                 else
                 {
-                    _context.accountspayable.AsNoTracking()
-                                       .Where(x => x.AccountOID == acccoundoid && x.ExpenseTypeOID != expensetypetoexcludeoid && x.DueDate >= launchstart && x.DueDate <= launchend)
-                                       .ToList()
-                                       .ForEach(account =>
-                                       {
-                                           desc = listExp.FirstOrDefault(x => x.OID == account.ExpenseTypeOID)?.Name!;
-                                           list.Add(new AccountModel() { AccountOID = acccoundoid, AccountValue = account.AccountValue, DueDate = account.DueDate, Payday = account.Payday, CurrencyType = currencytype, Description = $"{desc} - {account.Description}", LaunchType = "EXPENSE" });
-                                       });
+                    var accountsP = await _context.accountspayable.AsNoTracking()
+                                            .Where(x => x.AccountOID == acccoundoid && x.ExpenseTypeOID != expensetypetoexcludeoid && x.DueDate >= launchstart && x.DueDate <= launchend)
+                                          .ToArrayAsync();
+
+                    list.AddRange(accountsP.Select(account => new AccountModel()
+                    {
+                        AccountOID = acccoundoid,
+                        AccountValue = account.AccountValue,
+                        DueDate = account.DueDate,
+                        Payday = account.Payday,
+                        CurrencyType = currencytype ?? "$",
+                        Description = $"{listExp.FirstOrDefault(x => x.OID == account.ExpenseTypeOID)?.Name} - {account.Description}",
+                        LaunchType = "EXPENSE"
+                    }).ToArray());
                 }
 
                 return new Tuple<List<AccountModel>, CashFlowModel>(list.OrderBy(x => x.DueDate).ThenBy(x => x.Payday).ToList(), model);

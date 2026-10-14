@@ -17,11 +17,12 @@ namespace CashFlow.DataAccess.Repositories
         protected override void Dispose(bool disposing)
             => base.Dispose(disposing);
 
-        public AccountReceivableDTO GetAccount(long oid)
+        public async Task<AccountReceivableDTO> GetAccount(long oid)
         {
             try
             {
-                return mapperFactory.getMapper().Map<AccountReceivableDTO>(_context.accountsreceivable.AsNoTracking().FirstOrDefault(x => x.OID == oid));
+                var account = await _context.accountsreceivable.AsNoTracking().FirstOrDefaultAsync(x => x.OID == oid);
+                return mapperFactory.getMapper().Map<AccountReceivableDTO>(account);
             }
             catch (Exception ex)
             {
@@ -30,28 +31,31 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public List<AccountReceivableDTO> GetAccountList(long acccoundoid, long revenueoid, DateTime start, DateTime end)
+        public async Task<List<AccountReceivableDTO>> GetAccountList(long acccoundoid, long revenueoid, DateTime start, DateTime end)
         {
             try
             {
-                List<AccountReceivableDTO> list = new List<AccountReceivableDTO>();
+                AccountReceivableEntity[] accounts;
 
                 if (revenueoid == 0)
                 {
-                    _context.accountsreceivable.AsNoTracking()
+                    accounts = await _context.accountsreceivable.AsNoTracking()
                                            .Where(x => x.AccountOID == acccoundoid && x.DueDate >= start && x.DueDate <= end)
-                                          .ToList()
-                                          .ForEach(account => list.Add(mapperFactory.getMapper().Map<AccountReceivableDTO>(account)));
+                                           .ToArrayAsync();
                 }
                 else
                 {
-                    _context.accountsreceivable.AsNoTracking()
-                                          .Where(x => x.AccountOID == acccoundoid && x.RevenueTypeOID == revenueoid && x.DueDate >= start && x.DueDate <= end)
-                                          .ToList()
-                                          .ForEach(account => list.Add(mapperFactory.getMapper().Map<AccountReceivableDTO>(account)));
+                    accounts = await _context.accountsreceivable.AsNoTracking()
+                                           .Where(x => x.AccountOID == acccoundoid && x.RevenueTypeOID == revenueoid && x.DueDate >= start && x.DueDate <= end)
+                                           .ToArrayAsync();
                 }
 
-                return list.OrderBy(x => x.DueDate).ThenBy(x => x.Payday).ToList();
+                var mapper = mapperFactory.getMapper();
+                return accounts
+                    .Select(item => mapper.Map<AccountReceivableDTO>(item))
+                    .OrderBy(x => x.DueDate)
+                    .ThenBy(x => x.Payday)
+                    .ToList();
             }
             catch (Exception ex)
             {
@@ -60,7 +64,7 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public long Add(AccountReceivableDTO model)
+        public async Task<long> Add(AccountReceivableDTO model)
         {
             try
             {
@@ -78,7 +82,7 @@ namespace CashFlow.DataAccess.Repositories
                 };
 
                 _context.accountsreceivable.Add(item);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 id = item.OID;
 
                 return id;
@@ -90,40 +94,30 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public bool Delete(long oid)
+        public async Task<bool> Delete(long oid)
         {
-            AccountReceivableEntity? account = null;
-
             try
             {
-                account = _context.accountsreceivable.FirstOrDefault(x => x.OID == oid);
-                if (account != null)
-                {
-                    _context.accountsreceivable.Attach(account);
-                    _context.accountsreceivable.Remove(account);
-                    _context.SaveChanges();
-                }
+                var deleted = await _context.accountsreceivable
+                                    .Where(a => a.OID == oid)
+                                    .ExecuteDeleteAsync();
 
-                return true;
+                return deleted > 0 ? true : false;
             }
             catch (Exception ex)
             {
                 Log.Error(ex);
                 return false;
             }
-            finally
-            {
-                account = null;
-            }
         }
 
-        public bool Update(AccountReceivableDTO model)
+        public async Task<bool> Update(AccountReceivableDTO model)
         {
             try
             {
                 bool ret = false;
 
-                var account = _context.accountsreceivable.FirstOrDefault(x => x.OID == model.OID);
+                var account = await _context.accountsreceivable.FirstOrDefaultAsync(x => x.OID == model.OID);
                 if (account != null)
                 {
                     account.AccountOID = model.AccountOID;
@@ -135,8 +129,7 @@ namespace CashFlow.DataAccess.Repositories
                     account.UpdatedBy = model.UpdatedBy;
                     account.UpdatedDate = model.UpdatedDate;
 
-                    _context.Entry(account).State = EntityState.Modified;
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
                     ret = true;
                 }

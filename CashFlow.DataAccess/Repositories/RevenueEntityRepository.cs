@@ -18,11 +18,12 @@ namespace CashFlow.DataAccess.Repositories
             => base.Dispose(disposing);
 
 
-        public RevenueTypeDTO GetRevenue(long oid)
+        public async Task<RevenueTypeDTO> GetRevenue(long oid)
         {
             try
             {
-                return mapperFactory.getMapper().Map<RevenueTypeDTO>(_context.revenues.AsNoTracking().FirstOrDefault(x => x.OID == oid));
+                var entity = await _context.revenues.AsNoTracking().FirstOrDefaultAsync(x => x.OID == oid);
+                return mapperFactory.getMapper().Map<RevenueTypeDTO>(entity);
             }
             catch (Exception ex)
             {
@@ -31,25 +32,25 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public RevenueTypeDTO GetRevenueByName(string name, long? oid = null)
+        public async Task<RevenueTypeDTO> GetRevenueByName(string name, long? oid = null)
         {
-            var item = _context.revenues.AsNoTracking().Where(x => x.Name == name && (oid == null || x.OID != oid)).FirstOrDefault();
+            var item = await _context.revenues.AsNoTracking().Where(x => x.Name == name && (oid == null || x.OID != oid)).FirstOrDefaultAsync();
             if (item != null)
                 return mapperFactory.getMapper().Map<RevenueTypeDTO>(item);
             else
                 return null!;
         }
 
-        public List<RevenueTypeDTO> GetRevenueList()
+        public async Task<List<RevenueTypeDTO>> GetRevenueList()
         {
             try
             {
-                List<RevenueTypeDTO> list = new List<RevenueTypeDTO>();
+                var revenues = await _context.revenues.AsNoTracking().OrderBy(o => o.Name)
+                                        .ToArrayAsync();
 
-                foreach (var item in _context.revenues.AsNoTracking().OrderBy(o => o.Name))
-                    list.Add(mapperFactory.getMapper().Map<RevenueTypeDTO>(item));
+                var mapper = mapperFactory.getMapper();
 
-                return list;
+                return revenues.Select(item => mapper.Map<RevenueTypeDTO>(item)).ToList();
             }
             catch (Exception ex)
             {
@@ -58,7 +59,7 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public long Add(RevenueTypeDTO model)
+        public async Task<long> Add(RevenueTypeDTO model)
         {
             try
             {
@@ -69,7 +70,7 @@ namespace CashFlow.DataAccess.Repositories
                 };
 
                 _context.revenues.Add(item);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 id = item.OID;
 
                 return id;
@@ -81,53 +82,36 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public bool Delete(long oid)
+        public async Task<bool> Delete(long oid)
         {
-            RevenueTypeEntity? revenue = null;
-
             try
             {
-                revenue = _context.revenues.FirstOrDefault(o => o.OID == oid);
-                if (revenue != null)
-                {
-                    _context.revenues.Attach(revenue);
-                    _context.revenues.Remove(revenue);
-                    _context.SaveChanges();
-                }
+                var deleted = await _context.revenues
+                                    .Where(a => a.OID == oid)
+                                    .ExecuteDeleteAsync();
 
-                return true;
+                return deleted > 0 ? true : false;
             }
             catch (Exception ex)
             {
                 Log.Error(ex);
                 return false;
             }
-            finally
-            {
-                revenue = null;
-            }
         }
 
-        public bool Update(RevenueTypeDTO model)
+        public async Task<bool> Update(RevenueTypeDTO model)
         {
             try
             {
-                bool ret = false;
+                var updated = await _context.revenues
+                                .Where(x => x.OID == model.OID)
+                                .ExecuteUpdateAsync(updates => updates
+                                    .SetProperty(h => h.Name, _ => model.Name));
 
-                var revenue = _context.revenues.FirstOrDefault(x => x.OID == model.OID);
-                if (revenue != null)
-                {
-                    revenue.Name = model.Name;
-
-                    _context.Entry(revenue).State = EntityState.Modified;
-                    _context.SaveChanges();
-
-                    ret = true;
-                }
-                else
+                if (updated == 0)
                     Log.Error("Revenue NOT found.");
 
-                return ret;
+                return updated > 0 ? true : false;
             }
             catch (Exception ex)
             {

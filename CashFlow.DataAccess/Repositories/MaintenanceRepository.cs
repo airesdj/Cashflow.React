@@ -17,7 +17,7 @@ namespace CashFlow.DataAccess.Repositories
             => base.Dispose(disposing);
 
 
-        public bool UploadDataViaDumpFile(string pathlog)
+        public async Task<bool> UploadDataViaDumpFile(string pathlog)
         {
             bool DataUploadSuccess = true;
             string dump_file_result_name = $"{pathlog}\\{DateTime.Now.ToString("yyyyMMdd")}_cashflow-fullDatabase-bkp.sql";
@@ -57,8 +57,8 @@ namespace CashFlow.DataAccess.Repositories
                 }
 
                 Log.Info("Data Upload Via Dump File has started to run.");
-                RunProcess(dumpmysqlMainScriptStructure);
-                RunProcess(dumpmysqlMainScriptData);
+                await RunProcess(dumpmysqlMainScriptStructure);
+                await RunProcess(dumpmysqlMainScriptData);
             }
             catch (Exception ex)
             {
@@ -73,7 +73,7 @@ namespace CashFlow.DataAccess.Repositories
             return DataUploadSuccess;
         }
 
-        private void RunProcess(string arguments)
+        private async Task RunProcess(string arguments)
         {
             ProcessStartInfo startinfo = new ProcessStartInfo();
             string mysqldump_binary = "D:\\MySQL\\MySQL8\\MySQL Server 8.0\\bin\\mysqldump.exe";
@@ -91,9 +91,9 @@ namespace CashFlow.DataAccess.Repositories
                 MySQLDump.StartInfo = startinfo;
                 MySQLDump.Start();
 
-                MySQLDump.WaitForExit();
+                await MySQLDump.WaitForExitAsync();
 
-                var err = MySQLDump.StandardError.ReadToEnd();
+                var err = await MySQLDump.StandardError.ReadToEndAsync();
 
                 if (MySQLDump.ExitCode > 0)
                     Log.Error(err);

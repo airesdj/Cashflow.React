@@ -288,7 +288,7 @@ export default function AccountReceivablePage() {
                 variant="h6"
                 sx={{ fontSize: "1.05rem", fontWeight: 700 }}
               >
-                Expenses
+                Revenues
               </Typography>
               <Chip
                 size="small"

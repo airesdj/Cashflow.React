@@ -35,7 +35,7 @@ public class LoginController : ControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login([FromBody] LoginRequest model)
     {
-        var user = userRepo.Authentication(model.UserName.Trim(), model.Password);
+        var user = await userRepo.Authentication(model.UserName.Trim(), model.Password);
         if (user is null)
             return Unauthorized(new { message = "Invalid username or password." });
 

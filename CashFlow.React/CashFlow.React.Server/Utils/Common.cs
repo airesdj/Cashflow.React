@@ -27,11 +27,12 @@ namespace CashFlow.React.Server.Utils
             logger = loggerFactory.CreateLogger("Common");
         }
 
-        public static Tuple<long, long, DateTime, DateTime> GetFixedFilterValues(AccountEntityRepository accountRepo)
+        public static async Task<Tuple<long, long, DateTime, DateTime>> GetFixedFilterValues(AccountEntityRepository accountRepo)
         {
             try
             {
-                DateTime launchFrom = (DateTime)accountRepo.GetPeriodStartFromMainSalary()!;
+                DateTime launchFrom = await accountRepo.GetPeriodStartFromMainSalary()
+                    ?? throw new InvalidOperationException("Mary salary period start was not found.");
                 return new Tuple<long, long, DateTime, DateTime>(accountRepo.MAIN_REVENUE_SALARY_OID, accountRepo.MAIN_ACCOUNT_OID, launchFrom, launchFrom.AddDays(6));
             }
             catch (Exception ex)
@@ -41,11 +42,11 @@ namespace CashFlow.React.Server.Utils
             }
         }
 
-        public static List<AccountDTO> GetAccountList(AccountEntityRepository accountRepo)
+        public static async Task<List<AccountDTO>> GetAccountList(AccountEntityRepository accountRepo)
         {
             try
             {
-                return accountRepo.GetAccountList().Where(x => !x.Name.Contains("INACTIVE")).ToList();
+                return (await accountRepo.GetAccountList()).Where(x => !x.Name.Contains("INACTIVE")).ToList();
             }
             catch (Exception ex)
             {
@@ -54,17 +55,17 @@ namespace CashFlow.React.Server.Utils
             }
         }
 
-        public static BalanceModel GetBalanceDetailsModel(AccountEntityRepository accountRepo, long acccoundoid, long expensetypeoid,
+        public static async Task<BalanceModel> GetBalanceDetailsModel(AccountEntityRepository accountRepo, long acccoundoid, long expensetypeoid,
                                                           long revenuetypeoid, DateTime launchstart, DateTime launchend)
         {
             try
             {
                 BalanceModel balance_model = new BalanceModel();
 
-                balance_model.PreviousBalance = accountRepo.GetAccountPreviousBalance(acccoundoid, launchstart);
-                balance_model.FinalBalance = accountRepo.GetAccountFinalBalance(acccoundoid, launchend);
+                balance_model.PreviousBalance = await accountRepo.GetAccountPreviousBalance(acccoundoid, launchstart);
+                balance_model.FinalBalance = await accountRepo.GetAccountFinalBalance(acccoundoid, launchend);
 
-                var total = accountRepo.GetAccountTotalForPeriod(acccoundoid, 0, expensetypeoid, revenuetypeoid, launchstart, launchend);
+                var total = await accountRepo.GetAccountTotalForPeriod(acccoundoid, 0, expensetypeoid, revenuetypeoid, launchstart, launchend);
 
                 balance_model.TotalExpenses = total.Item1;
                 balance_model.TotalRevenues = total.Item2;

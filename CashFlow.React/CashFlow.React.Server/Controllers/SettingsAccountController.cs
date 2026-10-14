@@ -23,9 +23,9 @@ namespace CashFlow.React.Server.Controllers
             this.logger = logger;
         }
 
-        private IActionResult Execute(Func<IActionResult> action, bool write = false)
+        private async Task<IActionResult> Execute(Func<Task<IActionResult>> action, bool write = false)
         {
-            try { return action(); }
+            try { return await action(); }
             catch (Exception exception)
             {
                 logger.LogError(exception, "Account request failed: {Method} {Path}", Request.Method, Request.Path);
@@ -38,9 +38,9 @@ namespace CashFlow.React.Server.Controllers
         }
 
         [HttpGet]
-        public IActionResult List([FromQuery] int? page) => Execute(() =>
+        public Task<IActionResult> List([FromQuery] int? page) => Execute(async () =>
         {
-            var pagedItems = accountRepo.GetAccountList().ToPagedList(page ?? 1, Common.TOTAL_ITEMS_PER_PAGE);
+            var pagedItems = (await accountRepo.GetAccountList()).ToPagedList(page ?? 1, Common.TOTAL_ITEMS_PER_PAGE);
 
             return Ok(new
             {
@@ -53,20 +53,16 @@ namespace CashFlow.React.Server.Controllers
         });
 
         [HttpGet("Form")]
-        public IActionResult Form() => Execute(() =>
+        public IActionResult Form() => Ok(new
         {
-            return Ok(new
-            {
-                item = (AccountDTO?)null
-            });
+            item = (AccountDTO?)null
         });
 
 
-
         [HttpGet("{id:int:min(1)}")]
-        public IActionResult Get(int id) => Execute(() =>
+        public Task<IActionResult> Get(int id) => Execute(async () =>
         {
-            var item = accountRepo.GetAccount(id);
+            var item = await accountRepo.GetAccount(id);
             if (item is null) return NotFound(new { message = "This account no longer exists." });
             return Ok(new
             {
@@ -75,12 +71,12 @@ namespace CashFlow.React.Server.Controllers
         });
 
         [HttpPost]
-        public IActionResult Create([FromBody] AccountDTO input) => Execute(() =>
+        public Task<IActionResult> Create([FromBody] AccountDTO input) => Execute(async () =>
         {
-            if (!ValidateInput(input)) return ValidationProblem(ModelState);
+            if (!await ValidateInput(input)) return ValidationProblem(ModelState);
 
             var now = Common.LocalNow;
-            var id = accountRepo.Add(input);
+            var id = await accountRepo.Add(input);
 
             if (id <= 0) return StatusCode(500, new { message = "This account was not added." });
             return CreatedAtAction(nameof(Get), new { id }, new { oid = id, message = "Account added successfully." });
@@ -88,32 +84,32 @@ namespace CashFlow.React.Server.Controllers
 
 
         [HttpPut("{id:int:min(1)}")]
-        public IActionResult Edit(int id, [FromBody] AccountDTO input) => Execute(() =>
+        public Task<IActionResult> Edit(int id, [FromBody] AccountDTO input) => Execute(async () =>
         {
-            if (!ValidateInput(input)) return ValidationProblem(ModelState);
+            if (!await ValidateInput(input)) return ValidationProblem(ModelState);
 
-            var model = accountRepo.GetAccount(id);
+            var model = await accountRepo.GetAccount(id);
             if (model is null) return NotFound(new { message = "This account no longer exists." });
             
-            if (!accountRepo.Update(input)) return StatusCode(500, new { message = "This account was not updated." });
+            if (!await accountRepo.Update(input)) return StatusCode(500, new { message = "This account was not updated." });
             return Ok(new { message = "Account updated successfully." });
         }, write: true);
 
 
         [HttpDelete("{id:int:min(1)}")]
-        public IActionResult Delete(int id) => Execute(() =>
+        public Task<IActionResult> Delete(int id) => Execute(async () =>
         {
-            if (accountRepo.GetAccount(id) is null) return NotFound(new { message = "This account no longer exists." });
-            accountRepo.Delete(id);
+            if (await accountRepo.GetAccount(id) is null) return NotFound(new { message = "This account no longer exists." });
+            await accountRepo.Delete(id);
             return Ok(new { message = "Account deleted successfully." });
         }, write: true);
 
 
-        private bool ValidateInput(AccountDTO input)
+        private async Task<bool> ValidateInput(AccountDTO input)
         {
             if (string.IsNullOrWhiteSpace(input.Name))
                 ModelState.AddModelError(nameof(input.Name), "Account name is required.");
-            if (accountRepo.GetAccountByName(input.Name, input.OID))
+            if (await accountRepo.GetAccountByName(input.Name, input.OID))
                 ModelState.AddModelError(nameof(input.Name), "Account name already exists.");
             if (string.IsNullOrWhiteSpace(input.CurrencyType))
                 ModelState.AddModelError(nameof(input.CurrencyType), "Currency type is required.");

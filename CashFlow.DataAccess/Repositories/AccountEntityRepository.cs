@@ -21,53 +21,49 @@ namespace CashFlow.DataAccess.Repositories
         protected override void Dispose(bool disposing)
             => base.Dispose(disposing);
 
-        public DateTime? GetPeriodStartFromMainSalary()
+        public async Task<DateTime?> GetPeriodStartFromMainSalary()
         {
             try
             {
-                var salaray = _context.accountsreceivable.AsNoTracking()
+                DateTime? duedate = await _context.accountsreceivable.AsNoTracking()
                                                    .Where(x => x.AccountOID == MAIN_ACCOUNT_OID &&
                                                                x.RevenueTypeOID == MAIN_REVENUE_SALARY_OID)
                                                    .OrderByDescending(x => x.OID)
-                                                   .FirstOrDefault();
-                if (salaray == null)
-                    return DateTime.Now;
-                else
-                    return salaray.DueDate;
+                                                   .Select(x => x.DueDate)
+                                                   .FirstOrDefaultAsync();
+                return duedate ?? DateTime.Now;
             }
             catch (Exception ex)
             {
                 Log.Error(ex);
-                return null!;
+                return null;
             }
         }
 
-        public List<AccountBalanceModel> GetAllAccountBalance(int mes, int year)
+        public async Task<List<AccountBalanceModel>> GetAllAccountBalance(int mes, int year)
         {
             try
             {
-                List<AccountBalanceModel> list = new List<AccountBalanceModel>();
-
                 DateTime dtfrom = new DateTime(year, mes, 1);
                 DateTime dtto = dtfrom.AddMonths(1).AddDays(-1);
 
-                list = (from a in _context.accounts.AsNoTracking()
-                        orderby a.OID
-                        select new AccountBalanceModel()
-                        {
-                            OID = a.OID,
-                            Name = a.Name,
-                            CurrencyType = a.CurrencyType!,
-                            Balance = 0
-                        }).ToList();
+                var list = await _context.accounts.AsNoTracking()
+                                .OrderBy(x => x.OID)
+                                .Select(a => new AccountBalanceModel()
+                                {
+                                    OID = a.OID,
+                                    Name = a.Name,
+                                    CurrencyType = a.CurrencyType!,
+                                    Balance = 0
+                                }).ToListAsync();
 
-                list.ForEach(item =>
+                foreach(var item in list)
                 {
-                    item.Balance = GetAccountPreviousBalance(item.OID, dtto.AddDays(1), true);
-                    item.TotalRevenue = GetAccountTotalRevenueForPeriod(item.OID, dtfrom, dtto);
-                    item.TotalRevenueAires = GetTotalAccountReneueAiresPayment(item.OID, dtfrom, dtto);
-                    item.TotalRevenueMarys = GetTotalAccountReneueMarysPayment(item.OID, dtfrom, dtto);
-                });
+                    item.Balance = await GetAccountPreviousBalance(item.OID, dtto.AddDays(1), true);
+                    item.TotalRevenue = await GetAccountTotalRevenueForPeriod(item.OID, dtfrom, dtto);
+                    item.TotalRevenueAires = await GetTotalAccountReneueAiresPayment(item.OID, dtfrom, dtto);
+                    item.TotalRevenueMarys = await GetTotalAccountReneueMarysPayment(item.OID, dtfrom, dtto);
+                }
 
                 return list;
             }
@@ -78,7 +74,7 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        private decimal GetAccountBalanceToday(long oid, DateTime from, DateTime to)
+        private async Task<decimal> GetAccountBalanceToday(long oid, DateTime from, DateTime to)
         {
             decimal balance = 0;
 
@@ -89,7 +85,8 @@ namespace CashFlow.DataAccess.Repositories
             strQuery.Append($" WHERE DueDate >= '{from.ToString("yyyy-MM-dd")}' AND DueDate <= '{to.ToString("yyyy-MM-dd")}'");
             strQuery.Append($" AND AccountOID = {oid} ");
             decimal total_payable = 0;
-            try { total_payable = _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString()).Select(q => q.Total).FirstOrDefault(); } catch { total_payable = 0; }
+            try { total_payable = await _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString())
+                                    .Select(q => q.Total).FirstOrDefaultAsync(); } catch { total_payable = 0; }
 
             strQuery.Clear();
 
@@ -98,7 +95,9 @@ namespace CashFlow.DataAccess.Repositories
             strQuery.Append($" WHERE DueDate >= '{from.ToString("yyyy-MM-dd")}' AND DueDate <= '{to.ToString("yyyy-MM-dd")}'");
             strQuery.Append($" AND AccountOID = {oid} ");
             decimal total_receivable = 0;
-            try { total_receivable = _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString()).Select(q => q.Total).FirstOrDefault(); } catch { total_receivable = 0; }
+            try { total_receivable = await _context.Database
+                                .SqlQueryRaw<QueryResultModel>(strQuery.ToString()).Select(q => q.Total)
+                                .FirstOrDefaultAsync(); } catch { total_receivable = 0; }
 
             balance = total_receivable - total_payable;
 
@@ -108,11 +107,12 @@ namespace CashFlow.DataAccess.Repositories
             return balance;
         }
 
-        public AccountDTO GetAccount(long oid)
+        public async Task<AccountDTO> GetAccount(long oid)
         {
             try
             {
-                return mapperFactory.getMapper().Map<AccountDTO>(_context.accounts.AsNoTracking().FirstOrDefault(x => x.OID == oid));
+                var account = await _context.accounts.AsNoTracking().FirstOrDefaultAsync(x => x.OID == oid);
+                return mapperFactory.getMapper().Map<AccountDTO>(account);
             }
             catch (Exception ex)
             {
@@ -121,19 +121,22 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public bool GetAccountByName(string name, long oid = 0)
-            => _context.accounts.AsNoTracking().Any(x => x.Name == name && (oid == 0 || x.OID != oid));
+        public Task<bool> GetAccountByName(string name, long oid = 0)
+            => _context.accounts.AsNoTracking().AnyAsync(x => x.Name == name && (oid == 0 || x.OID != oid));
 
-        public List<AccountDTO> GetAccountList()
+        public async Task<List<AccountDTO>> GetAccountList()
         {
             try
             {
-                List<AccountDTO> list = new List<AccountDTO>();
+                var accounts = await _context.accounts.AsNoTracking()
+                                .OrderBy(o => o.OID)
+                                .ToArrayAsync();
 
-                foreach (var item in _context.accounts.AsNoTracking().OrderBy(o => o.OID))
-                    list.Add(mapperFactory.getMapper().Map<AccountDTO>(item));
+                var mapper = mapperFactory.getMapper();
 
-                return list;
+                return accounts
+                            .Select(item => mapper.Map<AccountDTO>(item))
+                            .ToList();
             }
             catch (Exception ex)
             {
@@ -142,7 +145,7 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public long Add(AccountDTO model)
+        public async Task<long> Add(AccountDTO model)
         {
             try
             {
@@ -154,7 +157,7 @@ namespace CashFlow.DataAccess.Repositories
                 };
 
                 _context.accounts.Add(item);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 id = item.OID;
 
                 return id;
@@ -166,55 +169,37 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public bool Delete(long oid)
+        public async Task<bool> Delete(long oid)
         {
-            AccountEntity? account = null;
-
             try
             {
-                account = _context.accounts.FirstOrDefault(a => a.OID == oid);
+                var deleted = await _context.accounts
+                                    .Where(a => a.OID == oid)
+                                    .ExecuteDeleteAsync();
 
-                if (account != null)
-                {
-                    _context.accounts.Attach(account);
-                    _context.accounts.Remove(account);
-                    _context.SaveChanges();
-                }
-
-                return true;
+                return deleted > 0 ? true : false;
             }
             catch (Exception ex)
             {
                 Log.Error(ex);
                 return false;
             }
-            finally
-            {
-                account = null;
-            }
         }
 
-        public bool Update(AccountDTO model)
+        public async Task<bool> Update(AccountDTO model)
         {
             try
             {
-                bool ret = false;
+                var updated = await _context.accounts
+                                .Where(x => x.OID == model.OID)
+                                .ExecuteUpdateAsync(updates => updates
+                                    .SetProperty(h => h.Name, _ => model.Name)
+                                    .SetProperty(h => h.CurrencyType, _ => model.CurrencyType));
 
-                var account = _context.accounts.FirstOrDefault(x => x.OID == model.OID);
-                if (account != null)
-                {
-                    account.Name = model.Name;
-                    account.CurrencyType = model.CurrencyType;
-
-                    _context.Entry(account).State = EntityState.Modified;
-                    _context.SaveChanges();
-
-                    ret = true;
-                }
-                else
+                if (updated == 0)
                     Log.Error("Account NOT found.");
 
-                return ret;
+                return updated > 0 ? true : false;
             }
             catch (Exception ex)
             {
@@ -223,7 +208,7 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public decimal GetAccountPreviousBalance(long oid, DateTime launch_date, bool isCurrentBalance = false)
+        public async Task<decimal> GetAccountPreviousBalance(long oid, DateTime launch_date, bool isCurrentBalance = false)
         {
             decimal balance = 0;
 
@@ -237,7 +222,8 @@ namespace CashFlow.DataAccess.Repositories
             strQuery.Append(" AND AccountOID = @p1 ");
             decimal total_payable = 0;
 
-            try { total_payable = _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString(), launch_date.ToString("yyyy-MM-dd"), oid).Select(q => q.Total).FirstOrDefault(); } catch { total_payable = 0; }
+            try { total_payable = await _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString(), launch_date.ToString("yyyy-MM-dd"), oid)
+                                    .Select(q => q.Total).FirstOrDefaultAsync(); } catch { total_payable = 0; }
 
             strQuery.Clear();
 
@@ -246,7 +232,8 @@ namespace CashFlow.DataAccess.Repositories
             strQuery.Append(" WHERE AccountOID = @p0 ");
             strQuery.Append(" AND DueDate < @p1");
             decimal total_receivable = 0;
-            try { total_receivable = _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString(), oid, launch_date.ToString("yyyy-MM-dd")).Select(q => q.Total).FirstOrDefault(); } catch { total_receivable = 0; }
+            try { total_receivable = await _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString(), oid, launch_date.ToString("yyyy-MM-dd"))
+                                        .Select(q => q.Total).FirstOrDefaultAsync(); } catch { total_receivable = 0; }
 
             balance = total_receivable - total_payable;
 
@@ -256,7 +243,7 @@ namespace CashFlow.DataAccess.Repositories
             return balance;
         }
 
-        public decimal GetTotalAccountReneueAiresPayment(long oid, DateTime from, DateTime to)
+        public async Task<decimal> GetTotalAccountReneueAiresPayment(long oid, DateTime from, DateTime to)
         {
             decimal total_receivable = 0;
 
@@ -267,7 +254,8 @@ namespace CashFlow.DataAccess.Repositories
             strQuery.Append($" WHERE AccountOID = {oid} ");
             strQuery.Append($" AND DueDate >= '{from.ToString("yyyy-MM-dd")}' AND DueDate <= '{to.ToString("yyyy-MM-dd")}'");
             strQuery.Append(" AND RevenueTypeOID = 12 ");
-            try { total_receivable = _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString()).Select(q => q.Total).FirstOrDefault(); } catch { total_receivable = 0; }
+            try { total_receivable = await _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString())
+                            .Select(q => q.Total).FirstOrDefaultAsync(); } catch { total_receivable = 0; }
 
             strQuery.Clear();
             strQuery = null!;
@@ -275,7 +263,7 @@ namespace CashFlow.DataAccess.Repositories
             return total_receivable;
         }
 
-        public decimal GetTotalAccountReneueMarysPayment(long oid, DateTime from, DateTime to)
+        public async Task<decimal> GetTotalAccountReneueMarysPayment(long oid, DateTime from, DateTime to)
         {
             decimal total_receivable = 0;
 
@@ -286,7 +274,8 @@ namespace CashFlow.DataAccess.Repositories
             strQuery.Append($" WHERE AccountOID = {oid} ");
             strQuery.Append($" AND DueDate >= '{from.ToString("yyyy-MM-dd")}' AND DueDate <= '{to.ToString("yyyy-MM-dd")}'");
             strQuery.Append(" AND RevenueTypeOID = 1 ");
-            try { total_receivable = _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString()).Select(q => q.Total).FirstOrDefault(); } catch { total_receivable = 0; }
+            try { total_receivable = await _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString())
+                                    .Select(q => q.Total).FirstOrDefaultAsync(); } catch { total_receivable = 0; }
 
             strQuery.Clear();
             strQuery = null!;
@@ -294,7 +283,7 @@ namespace CashFlow.DataAccess.Repositories
             return total_receivable;
         }
 
-        public decimal GetAccountFinalBalance(long oid, DateTime launch_date)
+        public async Task<decimal> GetAccountFinalBalance(long oid, DateTime launch_date)
         {
             decimal balance = 0;
 
@@ -305,7 +294,8 @@ namespace CashFlow.DataAccess.Repositories
             strQuery.Append($" WHERE DueDate <= '{launch_date.ToString("yyyy-MM-dd")}'");
             strQuery.Append($" AND AccountOID = {oid} ");
             decimal total_payable = 0;
-            try { total_payable = _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString()).Select(q => q.Total).FirstOrDefault(); } catch { total_payable = 0; }
+            try { total_payable = await _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString())
+                                    .Select(q => q.Total).FirstOrDefaultAsync(); } catch { total_payable = 0; }
 
             strQuery.Clear();
 
@@ -314,7 +304,8 @@ namespace CashFlow.DataAccess.Repositories
             strQuery.Append($" WHERE DueDate <= '{launch_date.ToString("yyyy-MM-dd")}'");
             strQuery.Append($" AND AccountOID = {oid} ");
             decimal total_receivable = 0;
-            try { total_receivable = _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString()).Select(q => q.Total).FirstOrDefault(); } catch { total_receivable = 0; }
+            try { total_receivable = await _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString())
+                                        .Select(q => q.Total).FirstOrDefaultAsync(); } catch { total_receivable = 0; }
 
             balance = total_receivable - total_payable;
 
@@ -324,7 +315,9 @@ namespace CashFlow.DataAccess.Repositories
             return balance;
         }
 
-        public Tuple<decimal, decimal> GetAccountTotalForPeriod(long oid, long expensetypetoexcludeoid, long expensetypeoid, long revenuetypeoid, DateTime launch_start, DateTime launch_end)
+        public async Task<Tuple<decimal, decimal>> GetAccountTotalForPeriod(long oid, long expensetypetoexcludeoid, 
+                                                                            long expensetypeoid, long revenuetypeoid, 
+                                                                            DateTime launch_start, DateTime launch_end)
         {
             StringBuilder strQuery = new StringBuilder();
             decimal total_payable = 0;
@@ -338,7 +331,8 @@ namespace CashFlow.DataAccess.Repositories
                 strQuery.Append($" AND ExpenseTypeOID != {expensetypetoexcludeoid} ");
             if (expensetypeoid > 0)
                 strQuery.Append($" AND ExpenseTypeOID = {expensetypeoid} ");
-            try { total_payable = _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString()).Select(q => q.Total).FirstOrDefault(); } catch { total_payable = 0; }
+            try { total_payable = await _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString())
+                                        .Select(q => q.Total).FirstOrDefaultAsync(); } catch { total_payable = 0; }
 
             strQuery.Clear();
 
@@ -350,7 +344,8 @@ namespace CashFlow.DataAccess.Repositories
                 strQuery.Append($" AND RevenueTypeOID != {expensetypetoexcludeoid + 1} ");
             if (revenuetypeoid > 0)
                 strQuery.Append($" AND RevenueTypeOID = {revenuetypeoid} ");
-            try { total_receivable = _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString()).Select(q => q.Total).FirstOrDefault(); } catch { total_receivable = 0; }
+            try { total_receivable = await _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString())
+                                        .Select(q => q.Total).FirstOrDefaultAsync(); } catch { total_receivable = 0; }
 
             strQuery.Clear();
             strQuery = null!;
@@ -358,7 +353,7 @@ namespace CashFlow.DataAccess.Repositories
             return new Tuple<decimal, decimal>(total_payable, total_receivable);
         }
 
-        public decimal GetAccountTotalRevenueForPeriod(long oid, DateTime launch_start, DateTime launch_end)
+        public async Task<decimal> GetAccountTotalRevenueForPeriod(long oid, DateTime launch_start, DateTime launch_end)
         {
             StringBuilder strQuery = new StringBuilder();
             decimal total_receivable = 0;
@@ -368,7 +363,8 @@ namespace CashFlow.DataAccess.Repositories
             strQuery.Append($" WHERE DueDate >= '{launch_start.ToString("yyyy-MM-dd")}' AND DueDate <= '{launch_end.ToString("yyyy-MM-dd")}'");
             strQuery.Append($" AND AccountOID = {oid} ");
             strQuery.Append($" AND RevenueTypeOID NOT IN (13,18) ");
-            try { total_receivable = _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString()).Select(q => q.Total).FirstOrDefault(); } catch { total_receivable = 0; }
+            try { total_receivable = await _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString())
+                                        .Select(q => q.Total).FirstOrDefaultAsync(); } catch { total_receivable = 0; }
 
             strQuery.Clear();
             strQuery = null!;
@@ -376,7 +372,7 @@ namespace CashFlow.DataAccess.Repositories
             return total_receivable;
         }
 
-        public decimal GetAccountTotalTransferToSaver(int mes, int year)
+        public async Task<decimal> GetAccountTotalTransferToSaver(int mes, int year)
         {
             StringBuilder strQuery = new StringBuilder();
             decimal total_payable = 0;
@@ -389,7 +385,8 @@ namespace CashFlow.DataAccess.Repositories
             strQuery.Append($" WHERE DueDate >= '{from.ToString("yyyy-MM-dd")}' AND DueDate <= '{to.ToString("yyyy-MM-dd")}'");
             strQuery.Append($" AND AccountOID = 1 ");
             strQuery.Append($" AND ExpenseTypeOID = 12 ");  //money transfer
-            try { total_payable = _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString()).Select(q => q.Total).FirstOrDefault(); } catch { total_payable = 0; }
+            try { total_payable = await _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString())
+                                    .Select(q => q.Total).FirstOrDefaultAsync(); } catch { total_payable = 0; }
 
             strQuery.Clear();
 
@@ -398,7 +395,8 @@ namespace CashFlow.DataAccess.Repositories
             strQuery.Append($" WHERE DueDate >= '{from.ToString("yyyy-MM-dd")}' AND DueDate <= '{to.ToString("yyyy-MM-dd")}'");
             strQuery.Append($" AND AccountOID = 1 ");
             strQuery.Append($" AND RevenueTypeOID = 15 ");
-            try { total_receivable = _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString()).Select(q => q.Total).FirstOrDefault(); } catch { total_receivable = 0; }
+            try { total_receivable = await _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString())
+                                        .Select(q => q.Total).FirstOrDefaultAsync(); } catch { total_receivable = 0; }
 
             total_payable = total_payable - total_receivable;
 
@@ -408,7 +406,7 @@ namespace CashFlow.DataAccess.Repositories
             return total_payable;
         }
 
-        public decimal GetAccountTotalTransferMaryPayment(int mes, int year)
+        public async Task<decimal> GetAccountTotalTransferMaryPayment(int mes, int year)
         {
             StringBuilder strQuery = new StringBuilder();
             decimal total_account = 0;
@@ -423,7 +421,8 @@ namespace CashFlow.DataAccess.Repositories
             strQuery.Append($" AND AccountOID = 1 ");
             strQuery.Append($" AND RevenueTypeOID = 18 ");  //marys payment
             sql = strQuery.ToString();
-            try { total_account = _context.Database.SqlQueryRaw<QueryResultModel>(sql).Select(q => q.Total).FirstOrDefault(); } catch { total_account = 0; }
+            try { total_account = await _context.Database.SqlQueryRaw<QueryResultModel>(sql)
+                                        .Select(q => q.Total).FirstOrDefaultAsync(); } catch { total_account = 0; }
 
             strQuery.Clear();
 
@@ -433,7 +432,8 @@ namespace CashFlow.DataAccess.Repositories
             strQuery.Append($" AND AccountOID = 7 ");
             strQuery.Append($" AND RevenueTypeOID = 1 ");
             sql = strQuery.ToString();
-            try { total_saver = _context.Database.SqlQueryRaw<QueryResultModel>(sql).Select(q => q.Total).FirstOrDefault(); } catch { total_saver = 0; }
+            try { total_saver = await _context.Database.SqlQueryRaw<QueryResultModel>(sql)
+                                    .Select(q => q.Total).FirstOrDefaultAsync(); } catch { total_saver = 0; }
 
             total_saver = total_saver - total_account;
 

@@ -18,11 +18,12 @@ namespace CashFlow.DataAccess.Repositories
             => base.Dispose(disposing);
 
 
-        public FixedExpenseDTO GetFixedExpense(long oid)
+        public async Task<FixedExpenseDTO> GetFixedExpense(long oid)
         {
             try
             {
-                return mapperFactory.getMapper().Map<FixedExpenseDTO>(_context.fixedexpenses.AsNoTracking().FirstOrDefault(x => x.OID == oid));
+                var entity = await _context.fixedexpenses.AsNoTracking().FirstOrDefaultAsync(x => x.OID == oid);
+                return mapperFactory.getMapper().Map<FixedExpenseDTO>(entity);
             }
             catch (Exception ex)
             {
@@ -31,13 +32,11 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public List<FixedExpenseDTO> GetFixedExpenseList()
+        public async Task<List<FixedExpenseDTO>> GetFixedExpenseList()
         {
             try
             {
-                List<FixedExpenseDTO> list = new List<FixedExpenseDTO>();
-
-                list = _context.fixedexpenses.AsNoTracking()
+                var list = await _context.fixedexpenses.AsNoTracking()
                         .Where(x => !x.IsDeleted)
                         .Select(o => new FixedExpenseDTO
                         {
@@ -52,7 +51,7 @@ namespace CashFlow.DataAccess.Repositories
                             IsDeleted = o.IsDeleted
                         })
                         .OrderBy(o => o.ExpenseTypeOID).ThenBy(o => o.Description)
-                        .ToList();
+                        .ToListAsync();
 
                 return list;
             }
@@ -63,7 +62,7 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public long Add(FixedExpenseDTO model)
+        public async Task<long> Add(FixedExpenseDTO model)
         {
             try
             {
@@ -81,7 +80,7 @@ namespace CashFlow.DataAccess.Repositories
                 };
 
                 _context.fixedexpenses.Add(item);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 id = item.OID;
 
                 return id;
@@ -93,25 +92,19 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public bool Delete(long oid)
+        public async Task<bool> Delete(long oid)
         {
             try
             {
-                bool ret = false;
-                var FixedExpense = _context.fixedexpenses.FirstOrDefault(x => x.OID == oid);
-                if (FixedExpense != null)
-                {
-                    FixedExpense.IsDeleted = true;
+                var updated = await _context.fixedexpenses
+                                .Where(x => x.OID == oid)
+                                .ExecuteUpdateAsync(updates => updates
+                                    .SetProperty(h => h.IsDeleted, _ => true));
 
-                    _context.Entry(FixedExpense).State = EntityState.Modified;
-                    _context.SaveChanges();
+                if (updated == 0)
+                    Log.Error("Fixed expense NOT found.");
 
-                    ret = true;
-                }
-                else
-                    Log.Error("FixedExpense NOT found.");
-
-                return ret;
+                return updated > 0 ? true : false;
             }
             catch (Exception ex)
             {
@@ -120,13 +113,13 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public bool Update(FixedExpenseDTO model)
+        public async Task<bool> Update(FixedExpenseDTO model)
         {
             try
             {
                 bool ret = false;
 
-                var FixedExpense = _context.fixedexpenses.FirstOrDefault(x => x.OID == model.OID);
+                var FixedExpense = await _context.fixedexpenses.FirstOrDefaultAsync(x => x.OID == model.OID);
                 if (FixedExpense != null)
                 {
                     FixedExpense.ExpenseTypeOID = model.ExpenseTypeOID;
@@ -138,13 +131,12 @@ namespace CashFlow.DataAccess.Repositories
                     FixedExpense.ExpenseValue = model.ExpenseValue;
                     FixedExpense.IsDeleted = false;
 
-                    _context.Entry(FixedExpense).State = EntityState.Modified;
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
                     ret = true;
                 }
                 else
-                    Log.Error("FixedExpense NOT found.");
+                    Log.Error("Fixed expense NOT found.");
 
                 return ret;
             }
@@ -155,13 +147,13 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public bool IsFortnightlyLaunched(DateTime datelimit)
+        public async Task<bool> IsFortnightlyLaunched(DateTime datelimit)
         {
             long expenseoid = 1;
-            return _context.accountspayable.AsNoTracking().Any(x => x.ExpenseTypeOID == expenseoid && x.DueDate >= datelimit);
+            return await _context.accountspayable.AsNoTracking().AnyAsync(x => x.ExpenseTypeOID == expenseoid && x.DueDate >= datelimit);
         }
 
-        public List<ExpenseTypeDTO> GetAllExpenseTypeTotal()
+        public async Task<List<ExpenseTypeDTO>> GetAllExpenseTypeTotal()
         {
             try
             {
@@ -169,21 +161,21 @@ namespace CashFlow.DataAccess.Repositories
 
                 var excluding = new long[] { 46, 47, 48, 49 };
 
-                var expenses_montly = (from f in _context.fixedexpenses.AsNoTracking()
+                var expenses_montly = await (from f in _context.fixedexpenses.AsNoTracking()
                                        join e in _context.expenses.AsNoTracking() on f.ExpenseTypeOID equals e.OID
                                        where !f.IsDeleted && f.IsMonthlyExpense && !excluding.Contains(e.OID)
                                        group f by new { e.OID, e.Name } into g
-                                       select new ExpenseTypeDTO { Name = g.Key.Name, EstimatedValue = g.Sum(p => p.ExpenseValue) ?? 0 }).ToList();
+                                       select new ExpenseTypeDTO { Name = g.Key.Name, EstimatedValue = g.Sum(p => p.ExpenseValue) ?? 0 }).ToArrayAsync();
 
                 list.AddRange(expenses_montly.Where(x => x.EstimatedValue > 0));
 
-                var expenses_fortn = (from f in _context.fixedexpenses.AsNoTracking()
+                var expenses_fortn = await (from f in _context.fixedexpenses.AsNoTracking()
                                       join e in _context.expenses.AsNoTracking() on f.ExpenseTypeOID equals e.OID
                                       where !f.IsDeleted && f.IsFortnightlyExpense && !excluding.Contains(e.OID)
                                       group f by new { e.Name } into g
-                                      select new ExpenseTypeDTO { Name = g.Key.Name, EstimatedValue = (g.Sum(p => p.ExpenseValue) * 2) ?? 0 }).ToList();
+                                      select new ExpenseTypeDTO { Name = g.Key.Name, EstimatedValue = (g.Sum(p => p.ExpenseValue) * 2) ?? 0 }).ToArrayAsync();
 
-                foreach (var expense in expenses_fortn.Where(x => x.EstimatedValue > 0).ToList())
+                foreach (var expense in expenses_fortn.Where(x => x.EstimatedValue > 0).ToArray())
                 {
                     var item = list.FirstOrDefault(x => x.Name == expense.Name);
 
@@ -193,14 +185,14 @@ namespace CashFlow.DataAccess.Repositories
                         item.EstimatedValue += expense.EstimatedValue;
                 }
 
-                var expenses_week = (from f in _context.fixedexpenses.AsNoTracking()
+                var expenses_week = await (from f in _context.fixedexpenses.AsNoTracking()
                                      join e in _context.expenses.AsNoTracking() on f.ExpenseTypeOID equals e.OID
                                      where !f.IsDeleted && !f.IsMonthlyExpense && !excluding.Contains(e.OID)
                                            && !f.IsFortnightlyExpense
                                      group f by new { e.Name } into g
-                                     select new ExpenseTypeDTO { Name = g.Key.Name, EstimatedValue = (g.Sum(p => p.ExpenseValue) * 4) ?? 0 }).ToList();
+                                     select new ExpenseTypeDTO { Name = g.Key.Name, EstimatedValue = (g.Sum(p => p.ExpenseValue) * 4) ?? 0 }).ToArrayAsync();
 
-                foreach (var expense in expenses_week.Where(x => x.EstimatedValue > 0).ToList())
+                foreach (var expense in expenses_week.Where(x => x.EstimatedValue > 0).ToArray())
                 {
                     var item = list.FirstOrDefault(x => x.Name == expense.Name);
 

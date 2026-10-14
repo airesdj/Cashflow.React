@@ -28,9 +28,9 @@ namespace CashFlow.React.Server.Controllers
             this.logger = logger;
         }
 
-        private IActionResult Execute(Func<IActionResult> action, bool write = false)
+        private async Task<IActionResult> Execute(Func<Task<IActionResult>> action, bool write = false)
         {
-            try { return action(); }
+            try { return await action(); }
             catch (Exception exception)
             {
                 logger.LogError(exception, "Cash flow request failed: {Method} {Path}", Request.Method, Request.Path);
@@ -43,11 +43,11 @@ namespace CashFlow.React.Server.Controllers
         }
 
         [HttpGet]
-        public IActionResult List([FromQuery] long? accountOID, [FromQuery] int? page,
+        public Task<IActionResult> List([FromQuery] long? accountOID, [FromQuery] int? page,
                             [FromQuery] long excludeExpenseTypeOID = 0,
-                            [FromQuery] string? from = null, [FromQuery] string? to = null) => Execute(() =>
+                            [FromQuery] string? from = null, [FromQuery] string? to = null) => Execute(async () =>
             {
-                var defaults = Utils.Common.GetFixedFilterValues(accountRepo);
+                var defaults = await Common.GetFixedFilterValues(accountRepo);
                 var accountId = accountOID ?? defaults.Item2;
                 var fromDate = defaults.Item3.Date;
                 var toDate = defaults.Item4.Date;
@@ -57,8 +57,8 @@ namespace CashFlow.React.Server.Controllers
                 if (fromDate > toDate)
                     return BadRequest(new { message = "From date must be on or before To date." });
 
-                var accounts = Common.GetAccountList(accountRepo);
-                var expenses = typeRepo.GetExpenseList();
+                var accounts = await Common.GetAccountList(accountRepo);
+                var expenses = await typeRepo.GetExpenseList();
                 if (!accounts.Any(x => x.OID == accountId))
                     return BadRequest(new { message = "Select a valid account." });
                 if (excludeExpenseTypeOID != 0 && !expenses.Any(x => x.OID == excludeExpenseTypeOID))
@@ -67,9 +67,9 @@ namespace CashFlow.React.Server.Controllers
                 // Keep the original repository/helper argument types. Widen these casts if your repository supports larger IDs.
                 var accountFilter = Convert.ToInt16(accountId);
                 var expenseFilter = Convert.ToInt16(excludeExpenseTypeOID);
-                var list = cashRepo.Get(accountFilter, expenseFilter, fromDate, toDate);
+                var list = await cashRepo.Get(accountFilter, expenseFilter, fromDate, toDate);
                 var items = list.Item1.OrderByDescending(x => x.DueDate).ThenBy(x => x.Payday).ToArray();
-                var balance = Common.GetBalanceDetailsModel(accountRepo, accountFilter, expenseFilter, 0, fromDate, toDate);
+                var balance = await Common.GetBalanceDetailsModel(accountRepo, accountFilter, expenseFilter, 0, fromDate, toDate);
 
                 var pagedItems = items.ToPagedList(page ?? 1, Common.TOTAL_ITEMS_PER_PAGE);
 
