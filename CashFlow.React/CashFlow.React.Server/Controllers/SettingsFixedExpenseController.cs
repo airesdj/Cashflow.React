@@ -14,12 +14,15 @@ namespace CashFlow.React.Server.Controllers
     public class SettingsFixedExpenseController : ControllerBase
     {
         private readonly FixedExpenseEntityRepository fixedRepo;
+        private readonly ExpenseEntityRepository expenseRepo;
         private readonly ILogger<SettingsRevenueTypeController> logger;
 
         public SettingsFixedExpenseController(FixedExpenseEntityRepository fixedRepo,
-                                         ILogger<SettingsRevenueTypeController> logger)
+                                              ExpenseEntityRepository expenseRepo,
+                                              ILogger<SettingsRevenueTypeController> logger)
         {
             this.fixedRepo = fixedRepo;
+            this.expenseRepo = expenseRepo;
             this.logger = logger;
         }
 
@@ -45,6 +48,7 @@ namespace CashFlow.React.Server.Controllers
             return Ok(new
             {
                 items = pagedItems.ToList(),
+                expenseTypes = await expenseRepo.GetExpenseList(),
                 pageNumber = pagedItems.PageNumber,
                 pageSize = pagedItems.PageSize,
                 totalItems = pagedItems.TotalItemCount,
@@ -53,9 +57,14 @@ namespace CashFlow.React.Server.Controllers
         });
 
         [HttpGet("Form")]
-        public IActionResult Form() => Ok(new
+        public Task<IActionResult> Form() => Execute(async () =>
         {
-            item = (AccountDTO?)null
+            return Ok(new
+            {
+                item = (FixedExpenseDTO?)null,
+                expenseTypes = await expenseRepo.GetExpenseList(),
+                defaultExpenseTypeOID = 0
+            });
         });
 
 
@@ -66,7 +75,9 @@ namespace CashFlow.React.Server.Controllers
             if (item is null) return NotFound(new { message = "This fixed expense no longer exists." });
             return Ok(new
             {
-                item
+                item,
+                expenseTypes = await expenseRepo.GetExpenseList(),
+                defaultExpenseTypeOID = 0
             });
         });
 

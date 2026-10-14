@@ -30,7 +30,7 @@ type Values = {
 };
 type Props = { data: AccountFormData; returnUrl: string; id?: string };
 
-function AccountForm({ data, returnUrl, id }: Props) {
+function AccountSettingsForm({ data, returnUrl, id }: Props) {
   const { expire } = useAuth();
   const navigate = useNavigate();
   const [values, setValues] = useState<Values>({
@@ -159,7 +159,7 @@ function AccountForm({ data, returnUrl, id }: Props) {
   );
 }
 
-export default function AccountFormPage() {
+export default function AccountSettingsFormPage() {
   const { id } = useParams();
   const [params] = useSearchParams();
   const location = useLocation();
@@ -229,12 +229,12 @@ export default function AccountFormPage() {
             {error}
           </Alert>
           <Button component={Link} to={returnUrl}>
-            Back to expenses
+            Back to accounts
           </Button>
         </>
       )}
       {!loading && data && (
-        <AccountForm
+        <AccountSettingsForm
           key={requestKey}
           data={data}
           id={id}

@@ -230,7 +230,7 @@ function ReceivableForm({ data, returnUrl, id }: Props) {
                 onChange={(event) => update("isPaid", event.target.checked)}
               />
             }
-            label="Paid"
+            label="Paid?"
           />
           <Typography variant="body2" color="text.secondary">
             {data.item?.payday && values.isPaid

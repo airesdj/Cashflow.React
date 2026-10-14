@@ -32,7 +32,7 @@ type Values = {
 };
 type Props = { data: ExpenseTypeFormData; returnUrl: string; id?: string };
 
-function ExpenseTypeForm({ data, returnUrl, id }: Props) {
+function ExpenseTypeSettingsForm({ data, returnUrl, id }: Props) {
   const { expire } = useAuth();
   const navigate = useNavigate();
   const [values, setValues] = useState<Values>({
@@ -152,7 +152,7 @@ function ExpenseTypeForm({ data, returnUrl, id }: Props) {
 
         <Stack direction="row" sx={{ justifyContent: "flex-end", gap: 1.5 }}>
           <Button component={Link} to={returnUrl} disabled={busy}>
-            {unknownOutcome ? "Check ExpenseType list" : "Cancel"}
+            {unknownOutcome ? "Check expense type list" : "Cancel"}
           </Button>
           <Button
             type="submit"
@@ -176,7 +176,7 @@ function ExpenseTypeForm({ data, returnUrl, id }: Props) {
   );
 }
 
-export default function ExpenseTypeFormPage() {
+export default function ExpenseTypeSettingsFormPage() {
   const { id } = useParams();
   const [params] = useSearchParams();
   const location = useLocation();
@@ -246,12 +246,12 @@ export default function ExpenseTypeFormPage() {
             {error}
           </Alert>
           <Button component={Link} to={returnUrl}>
-            Back to expenses
+            Back to expense types
           </Button>
         </>
       )}
       {!loading && data && (
-        <ExpenseTypeForm
+        <ExpenseTypeSettingsForm
           key={requestKey}
           data={data}
           id={id}

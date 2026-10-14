@@ -37,7 +37,6 @@ namespace CashFlow.DataAccess.Repositories
             try
             {
                 var list = await _context.fixedexpenses.AsNoTracking()
-                        .Where(x => !x.IsDeleted)
                         .Select(o => new FixedExpenseDTO
                         {
                             OID = o.OID,

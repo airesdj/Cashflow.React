@@ -24,7 +24,7 @@ import type { Account, AccountListData } from "./types";
 import { Pagination } from "@mui/material";
 import SettingsActionDialog from "./SettingsActionDialog";
 
-export default function AccountSettingsPage() {
+export default function RevenueTypeSettingsPage() {
   const { expire } = useAuth();
   const location = useLocation();
   const [params, setParams] = useSearchParams();

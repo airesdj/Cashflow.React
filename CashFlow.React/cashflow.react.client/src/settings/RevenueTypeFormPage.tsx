@@ -29,7 +29,7 @@ type Values = {
 };
 type Props = { data: RevenueTypeFormData; returnUrl: string; id?: string };
 
-function AccountForm({ data, returnUrl, id }: Props) {
+function RevenueTypeForm({ data, returnUrl, id }: Props) {
   const { expire } = useAuth();
   const navigate = useNavigate();
   const [values, setValues] = useState<Values>({
@@ -122,7 +122,7 @@ function AccountForm({ data, returnUrl, id }: Props) {
         </TextField>
         <Stack direction="row" sx={{ justifyContent: "flex-end", gap: 1.5 }}>
           <Button component={Link} to={returnUrl} disabled={busy}>
-            {unknownOutcome ? "Check account list" : "Cancel"}
+            {unknownOutcome ? "Check revenue type list" : "Cancel"}
           </Button>
           <Button
             type="submit"
@@ -146,7 +146,7 @@ function AccountForm({ data, returnUrl, id }: Props) {
   );
 }
 
-export default function AccountFormPage() {
+export default function RevenueTypeSettingsFormPage() {
   const { id } = useParams();
   const [params] = useSearchParams();
   const location = useLocation();
@@ -216,12 +216,12 @@ export default function AccountFormPage() {
             {error}
           </Alert>
           <Button component={Link} to={returnUrl}>
-            Back to expenses
+            Back to expense types
           </Button>
         </>
       )}
       {!loading && data && (
-        <AccountForm
+        <RevenueTypeForm
           key={requestKey}
           data={data}
           id={id}
