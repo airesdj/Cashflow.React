@@ -15,6 +15,8 @@ export type AccountSaveInput = {
   currencyType: string;
 };
 
+
+
 export type ExpenseType = { oid: number; name: string; estimatedValue: number };
 export type ExpenseTypeListData = {
   items: ExpenseType[];
@@ -30,4 +32,21 @@ export type ExpenseTypeSaveInput = {
   OID: number;
   name: string;
   estimatedValue: number;
+};
+
+
+export type RevenueType = { oid: number; name: string };
+export type RevenueTypeListData = {
+  items: ExpenseType[];
+  pageNumber: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+};
+export type RevenueTypeFormData = {
+  item: RevenueType | null;
+};
+export type RevenueTypeSaveInput = {
+  OID: number;
+  name: string;
 };

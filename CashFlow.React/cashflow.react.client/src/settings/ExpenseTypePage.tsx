@@ -191,7 +191,7 @@ const closeAction = () => {
               <Table
                 size="small"
                 stickyHeader
-                aria-label="Settings - Expense Type"
+                aria-label="Settings - Expense Types"
                 sx={{ minWidth: 760 }}
               >
                 <TableHead>

@@ -32,14 +32,8 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
-        public async Task<RevenueTypeDTO> GetRevenueByName(string name, long? oid = null)
-        {
-            var item = await _context.revenues.AsNoTracking().Where(x => x.Name == name && (oid == null || x.OID != oid)).FirstOrDefaultAsync();
-            if (item != null)
-                return mapperFactory.getMapper().Map<RevenueTypeDTO>(item);
-            else
-                return null!;
-        }
+        public Task<bool> GetRevenueByName(string name, long oid = 0)
+            => _context.revenues.AsNoTracking().AnyAsync(x => x.Name == name && (oid == 0 || x.OID != oid));
 
         public async Task<List<RevenueTypeDTO>> GetRevenueList()
         {

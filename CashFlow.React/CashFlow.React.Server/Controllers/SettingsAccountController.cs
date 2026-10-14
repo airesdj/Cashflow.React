@@ -90,7 +90,7 @@ namespace CashFlow.React.Server.Controllers
 
             var model = await accountRepo.GetAccount(id);
             if (model is null) return NotFound(new { message = "This account no longer exists." });
-            
+
             if (!await accountRepo.Update(input)) return StatusCode(500, new { message = "This account was not updated." });
             return Ok(new { message = "Account updated successfully." });
         }, write: true);

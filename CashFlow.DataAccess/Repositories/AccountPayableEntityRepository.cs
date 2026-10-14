@@ -26,22 +26,22 @@ namespace CashFlow.DataAccess.Repositories
                 List<AccountPayableDTO> list = new List<AccountPayableDTO>();
 
                 list = await (from a in _context.accountspayable.AsNoTracking()
-                               join e in _context.expenses.AsNoTracking() on a.ExpenseTypeOID equals e.OID
-                                where a.DueDate == day
-                                select new AccountPayableDTO()
-                                {
-                                    OID = a.OID,
-                                    AccountOID = a.AccountOID,
-                                    DueDate = day,
-                                    Description = e.Name,
-                                    ExpenseTypeOID = a.ExpenseTypeOID,
-                                    Payday = a.Payday,
-                                    AccountValue = a.AccountValue,
-                                    CreatedBy = a.CreatedBy,
-                                    CreatedDate = a.CreatedDate,
-                                    UpdatedBy = a.UpdatedBy,
-                                    UpdatedDate = a.UpdatedDate
-                                }).ToListAsync();
+                              join e in _context.expenses.AsNoTracking() on a.ExpenseTypeOID equals e.OID
+                              where a.DueDate == day
+                              select new AccountPayableDTO()
+                              {
+                                  OID = a.OID,
+                                  AccountOID = a.AccountOID,
+                                  DueDate = day,
+                                  Description = e.Name,
+                                  ExpenseTypeOID = a.ExpenseTypeOID,
+                                  Payday = a.Payday,
+                                  AccountValue = a.AccountValue,
+                                  CreatedBy = a.CreatedBy,
+                                  CreatedDate = a.CreatedDate,
+                                  UpdatedBy = a.UpdatedBy,
+                                  UpdatedDate = a.UpdatedDate
+                              }).ToListAsync();
 
                 return list;
             }
@@ -220,7 +220,7 @@ namespace CashFlow.DataAccess.Repositories
         {
             if (lines != null)
             {
-                var payable_list = await _context.accountspayable.Where(x => x.AccountOID == accountOID && 
+                var payable_list = await _context.accountspayable.Where(x => x.AccountOID == accountOID &&
                                                                                                     x.DueDate >= dateFrom && x.DueDate <= dateTo)
                                                                     .ToListAsync();
 
@@ -298,7 +298,7 @@ namespace CashFlow.DataAccess.Repositories
                 return false;
         }
 
-        private Tuple<bool, AccountPayableEntity, long> LaunchValid(List<AccountPayableEntity> payable_list, DateTime import_date, 
+        private Tuple<bool, AccountPayableEntity, long> LaunchValid(List<AccountPayableEntity> payable_list, DateTime import_date,
                                                                     decimal import_value, string import_desc, DateTime from)
         {
             const long EXPENSES_EXTRAS = 9;
@@ -402,9 +402,9 @@ namespace CashFlow.DataAccess.Repositories
                 var expenses_entity = await _context.expenses.AsNoTracking().ToArrayAsync();
 
                 var expensesdto = (from f in expenses_entity
-                                         join e in accountspay on f.OID equals e.ExpenseTypeOID
-                                      group e by new { f.Name, f.OID } into g
-                                      select new ExpenseTypeDTO { OID = g.Key.OID, Name = g.Key.Name, EstimatedValue = g.Sum(p => p.AccountValue) })
+                                   join e in accountspay on f.OID equals e.ExpenseTypeOID
+                                   group e by new { f.Name, f.OID } into g
+                                   select new ExpenseTypeDTO { OID = g.Key.OID, Name = g.Key.Name, EstimatedValue = g.Sum(p => p.AccountValue) })
                                .ToArray();
 
                 list.AddRange(expensesdto.Where(x => x.EstimatedValue > 0));
@@ -412,9 +412,9 @@ namespace CashFlow.DataAccess.Repositories
                 if (accountrepayment_wa?.Any() ?? false)
                 {
                     expensesdto = (from f in expenses_entity
-                                      join e in accountrepayment_wa on f.OID equals e.ExpenseTypeOID
-                                      group e by new { f.Name, f.OID } into g
-                                      select new ExpenseTypeDTO { OID = g.Key.OID, Name = g.Key.Name, EstimatedValue = g.Sum(p => p.AccountValue) })
+                                   join e in accountrepayment_wa on f.OID equals e.ExpenseTypeOID
+                                   group e by new { f.Name, f.OID } into g
+                                   select new ExpenseTypeDTO { OID = g.Key.OID, Name = g.Key.Name, EstimatedValue = g.Sum(p => p.AccountValue) })
                                    .ToArray();
 
                     list.AddRange(expensesdto.Where(x => x.EstimatedValue > 0));
@@ -423,9 +423,9 @@ namespace CashFlow.DataAccess.Repositories
                 if (accountrepayment_qld?.Any() ?? false)
                 {
                     expensesdto = (from f in expenses_entity
-                                         join e in accountrepayment_qld on f.OID equals e.ExpenseTypeOID
-                                        group e by new { f.Name, f.OID } into g
-                                        select new ExpenseTypeDTO { OID = g.Key.OID, Name = g.Key.Name, EstimatedValue = g.Sum(p => p.AccountValue) })
+                                   join e in accountrepayment_qld on f.OID equals e.ExpenseTypeOID
+                                   group e by new { f.Name, f.OID } into g
+                                   select new ExpenseTypeDTO { OID = g.Key.OID, Name = g.Key.Name, EstimatedValue = g.Sum(p => p.AccountValue) })
                                    .ToArray();
 
                     list.AddRange(expensesdto.Where(x => x.EstimatedValue > 0));

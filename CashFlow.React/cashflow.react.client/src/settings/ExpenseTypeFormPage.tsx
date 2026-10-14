@@ -224,7 +224,7 @@ export default function ExpenseTypeFormPage() {
   return (
     <Box>
       <Typography component="h1" variant="h4" sx={{ fontWeight: 700, mb: 3 }}>
-        {id ? "Edit ExpenseType Settings" : "New ExpenseType Settings"}
+        {id ? "Edit Expense Type Settings" : "New Expense Type Settings"}
       </Typography>
       {loading && (
         <Skeleton variant="rounded" height={480} sx={{ maxWidth: 800 }} />

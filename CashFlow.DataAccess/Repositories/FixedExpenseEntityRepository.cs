@@ -162,18 +162,18 @@ namespace CashFlow.DataAccess.Repositories
                 var excluding = new long[] { 46, 47, 48, 49 };
 
                 var expenses_montly = await (from f in _context.fixedexpenses.AsNoTracking()
-                                       join e in _context.expenses.AsNoTracking() on f.ExpenseTypeOID equals e.OID
-                                       where !f.IsDeleted && f.IsMonthlyExpense && !excluding.Contains(e.OID)
-                                       group f by new { e.OID, e.Name } into g
-                                       select new ExpenseTypeDTO { Name = g.Key.Name, EstimatedValue = g.Sum(p => p.ExpenseValue) ?? 0 }).ToArrayAsync();
+                                             join e in _context.expenses.AsNoTracking() on f.ExpenseTypeOID equals e.OID
+                                             where !f.IsDeleted && f.IsMonthlyExpense && !excluding.Contains(e.OID)
+                                             group f by new { e.OID, e.Name } into g
+                                             select new ExpenseTypeDTO { Name = g.Key.Name, EstimatedValue = g.Sum(p => p.ExpenseValue) ?? 0 }).ToArrayAsync();
 
                 list.AddRange(expenses_montly.Where(x => x.EstimatedValue > 0));
 
                 var expenses_fortn = await (from f in _context.fixedexpenses.AsNoTracking()
-                                      join e in _context.expenses.AsNoTracking() on f.ExpenseTypeOID equals e.OID
-                                      where !f.IsDeleted && f.IsFortnightlyExpense && !excluding.Contains(e.OID)
-                                      group f by new { e.Name } into g
-                                      select new ExpenseTypeDTO { Name = g.Key.Name, EstimatedValue = (g.Sum(p => p.ExpenseValue) * 2) ?? 0 }).ToArrayAsync();
+                                            join e in _context.expenses.AsNoTracking() on f.ExpenseTypeOID equals e.OID
+                                            where !f.IsDeleted && f.IsFortnightlyExpense && !excluding.Contains(e.OID)
+                                            group f by new { e.Name } into g
+                                            select new ExpenseTypeDTO { Name = g.Key.Name, EstimatedValue = (g.Sum(p => p.ExpenseValue) * 2) ?? 0 }).ToArrayAsync();
 
                 foreach (var expense in expenses_fortn.Where(x => x.EstimatedValue > 0).ToArray())
                 {
@@ -186,11 +186,11 @@ namespace CashFlow.DataAccess.Repositories
                 }
 
                 var expenses_week = await (from f in _context.fixedexpenses.AsNoTracking()
-                                     join e in _context.expenses.AsNoTracking() on f.ExpenseTypeOID equals e.OID
-                                     where !f.IsDeleted && !f.IsMonthlyExpense && !excluding.Contains(e.OID)
-                                           && !f.IsFortnightlyExpense
-                                     group f by new { e.Name } into g
-                                     select new ExpenseTypeDTO { Name = g.Key.Name, EstimatedValue = (g.Sum(p => p.ExpenseValue) * 4) ?? 0 }).ToArrayAsync();
+                                           join e in _context.expenses.AsNoTracking() on f.ExpenseTypeOID equals e.OID
+                                           where !f.IsDeleted && !f.IsMonthlyExpense && !excluding.Contains(e.OID)
+                                                 && !f.IsFortnightlyExpense
+                                           group f by new { e.Name } into g
+                                           select new ExpenseTypeDTO { Name = g.Key.Name, EstimatedValue = (g.Sum(p => p.ExpenseValue) * 4) ?? 0 }).ToArrayAsync();
 
                 foreach (var expense in expenses_week.Where(x => x.EstimatedValue > 0).ToArray())
                 {

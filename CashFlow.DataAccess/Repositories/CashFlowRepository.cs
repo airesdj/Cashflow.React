@@ -20,7 +20,7 @@ namespace CashFlow.DataAccess.Repositories
             => base.Dispose(disposing);
 
 
-        public async Task<Tuple<List<AccountModel>, CashFlowModel>> Get(long acccoundoid, long expensetypetoexcludeoid, 
+        public async Task<Tuple<List<AccountModel>, CashFlowModel>> Get(long acccoundoid, long expensetypetoexcludeoid,
                                                                         DateTime launchstart, DateTime launchend)
         {
             try

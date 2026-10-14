@@ -13,6 +13,8 @@ import SettingsAccountPage from './settings/AccountPage';
 import SettingsAccountFormPage from './settings/AccountFormPage';
 import SettingsExpenseTypePage from './settings/ExpenseTypePage';
 import SettingsExpenseTypeFormPage from './settings/ExpenseTypeFormPage';
+import SettingsRevenueTypePage from './settings/RevenueTypePage';
+import SettingsRevenueTypeFormPage from './settings/RevenueTypeFormPage';
 
 function LoginRoute() {
   const { user, login, notice } = useAuth();
@@ -57,7 +59,10 @@ export default function App() {
       <Route path="settings/expense/new" element={<SettingsExpenseTypeFormPage />} />
       <Route path="settings/expense/:id/edit" element={<SettingsExpenseTypeFormPage />} />
 
-      <Route path="settings/revenue" element={<UpcomingPage title="Revenue" />} />
+      <Route path="settings/revenue" element={<SettingsRevenueTypePage />} />
+      <Route path="settings/revenue/new" element={<SettingsRevenueTypeFormPage />} />
+      <Route path="settings/revenue/:id/edit" element={<SettingsRevenueTypeFormPage />} />
+
       <Route path="settings/fixed-expense" element={<UpcomingPage title="Fixed Expense" />} />
 
       <Route path="*" element={<NotFound />} />
