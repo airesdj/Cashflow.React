@@ -88,7 +88,7 @@ namespace CashFlow.React.Server.Controllers
         {
             if (!await ValidateInput(input)) return ValidationProblem(ModelState);
 
-            var model = expenseRepo.GetExpense(id);
+            var model = await expenseRepo.GetExpense(id);
             if (model is null) return NotFound(new { message = "This expense type no longer exists." });
 
             if (!await expenseRepo.Update(input)) return StatusCode(500, new { message = "This expense type was not updated." });

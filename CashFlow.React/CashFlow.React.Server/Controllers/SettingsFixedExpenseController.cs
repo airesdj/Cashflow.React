@@ -99,7 +99,7 @@ namespace CashFlow.React.Server.Controllers
         {
             if (!ValidateInput(input)) return ValidationProblem(ModelState);
 
-            var model = fixedRepo.GetFixedExpense(id);
+            var model = await fixedRepo.GetFixedExpense(id);
             if (model is null) return NotFound(new { message = "This fixed expense no longer exists." });
 
             if (!await fixedRepo.Update(input)) return StatusCode(500, new { message = "This fixed expense was not updated." });

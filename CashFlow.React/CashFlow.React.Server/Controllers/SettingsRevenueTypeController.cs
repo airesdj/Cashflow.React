@@ -88,7 +88,7 @@ namespace CashFlow.React.Server.Controllers
         {
             if (!await ValidateInput(input)) return ValidationProblem(ModelState);
 
-            var model = revenueRepo.GetRevenue(id);
+            var model = await revenueRepo.GetRevenue(id);
             if (model is null) return NotFound(new { message = "This revenue type no longer exists." });
 
             if (!await revenueRepo.Update(input)) return StatusCode(500, new { message = "This revenue type was not updated." });
