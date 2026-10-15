@@ -86,12 +86,13 @@ namespace CashFlow.React.Server.Controllers
         [HttpGet("Form")]
         public Task<IActionResult> Form([FromQuery] long? accountOID) => Execute(async () =>
         {
+            const byte EXPENSE_SUPERMARKET = 2;
             var accounts = await Common.GetAccountList(onlyaccountRepo);
             var expenses = await typeRepo.GetExpenseList();
             var defaults = await Common.GetFixedFilterValues(onlyaccountRepo);
             var selectedAccount = accountOID ?? defaults.Item2;
             if (!accounts.Any(x => x.OID == selectedAccount)) selectedAccount = accounts.FirstOrDefault()?.OID ?? 0;
-            var selectedExpense = expenses.Any(x => x.OID == 9) ? 9 : expenses.FirstOrDefault()?.OID ?? 0;
+            var selectedExpense = expenses.Any(x => x.OID == EXPENSE_SUPERMARKET) ? EXPENSE_SUPERMARKET : expenses.FirstOrDefault()?.OID ?? 0;
             return Ok(new
             {
                 item = (AccountPayableDTO?)null,
