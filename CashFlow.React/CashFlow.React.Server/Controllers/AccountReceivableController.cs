@@ -100,7 +100,7 @@ namespace CashFlow.React.Server.Controllers
                 accounts,
                 revenues,
                 defaultAccountOID = selectedAccount,
-                defaultExpenseTypeOID = selectedExpense,
+                defaultRevenueTypeOID = selectedExpense,
                 today = Common.Iso(Common.LocalNow.Date)
             });
         });
