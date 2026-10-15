@@ -426,9 +426,10 @@ namespace CashFlow.DataAccess.Repositories
 
             strQuery.Append(" SELECT IFNULL(SUM(AccountValue), 0) as total");
             strQuery.Append(" FROM account_payable");
-            strQuery.Append($" WHERE DueDate >= '{from.ToString("yyyy-MM-dd")}' AND DueDate <= '{to.ToString("yyyy-MM-dd")}'");
             strQuery.Append($" AND AccountOID = 1 ");
+            strQuery.Append($" WHERE DueDate >= '{from.ToString("yyyy-MM-dd")}' AND DueDate <= '{to.ToString("yyyy-MM-dd")}'");
             strQuery.Append($" AND ExpenseTypeOID = 12 ");  //money transfer
+            strQuery.Append($" AND Payday is NULL ");
             try
             {
                 total_payable = await _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString())
@@ -440,9 +441,10 @@ namespace CashFlow.DataAccess.Repositories
 
             strQuery.Append(" SELECT IFNULL(SUM(AccountValue), 0) as total");
             strQuery.Append(" FROM account_receivable");
-            strQuery.Append($" WHERE DueDate >= '{from.ToString("yyyy-MM-dd")}' AND DueDate <= '{to.ToString("yyyy-MM-dd")}'");
             strQuery.Append($" AND AccountOID = 1 ");
+            strQuery.Append($" WHERE DueDate >= '{from.ToString("yyyy-MM-dd")}' AND DueDate <= '{to.ToString("yyyy-MM-dd")}'");
             strQuery.Append($" AND RevenueTypeOID = 15 ");
+            strQuery.Append($" AND Payday is NULL ");
             try
             {
                 total_receivable = await _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString())
