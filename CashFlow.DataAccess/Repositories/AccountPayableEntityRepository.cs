@@ -200,6 +200,20 @@ namespace CashFlow.DataAccess.Repositories
                     account.UpdatedBy = model.UpdatedBy;
                     account.UpdatedDate = model.UpdatedDate;
 
+                    if (model.PaymentWithLaunch)
+                    {
+                        _context.accountsreceivable.Add(new AccountReceivableEntity()
+                        {
+                            AccountOID = 5, //transfer funds account
+                            RevenueTypeOID = 13, //money transfer oid
+                            DueDate = DateTime.Now,
+                            CreatedBy = model.UpdatedBy,
+                            CreatedDate = DateTime.Now,
+                            AccountValue = model.AccountValue,
+                            Payday = model.Payday
+                        });
+                    }
+
                     await _context.SaveChangesAsync();
 
                     ret = true;

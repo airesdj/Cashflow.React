@@ -187,6 +187,17 @@ namespace CashFlow.React.Server.Controllers
             if (model is null) return NotFound(new { message = "This expense no longer exists." });
             if (input.IsPaid is null) return BadRequest(new { message = "Specify whether the expense is paid." });
 
+            const byte MONEY_TRANFER_OID = 12;
+            const byte MAIN_ACCOUNT_OID = 1;
+            if (model.ExpenseTypeOID == MONEY_TRANFER_OID &&
+                input.IsPaid == true &&
+                model.Payday == null &&
+                model.AccountOID == MAIN_ACCOUNT_OID &&
+                (model.Description?.ToLower().Contains("transfer to savings") ?? false))
+            {
+                model.PaymentWithLaunch = true;
+            }
+
             var now = Common.LocalNow;
             // Set the requested state explicitly instead of toggling on each request.
             model.Payday = input.IsPaid.Value ? model.Payday ?? now.Date : null;
