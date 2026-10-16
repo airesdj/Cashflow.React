@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { AppBar, Avatar, Box, Button, Collapse, Dialog, DialogActions, DialogContent, DialogTitle, Divider,
-  Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Menu, MenuItem, Toolbar, Typography } from '@mui/material';
+import { AppBar, Avatar, Box, Button, Collapse, Divider,
+  Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Menu, MenuItem, Toolbar } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/DashboardOutlined';
 import PayableIcon from '@mui/icons-material/ReceiptLongOutlined';
