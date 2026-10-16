@@ -16,15 +16,20 @@ namespace CashFlow.React.Server.Controllers
         private readonly FixedExpenseEntityRepository fixedRepo;
         private readonly ILogger<DashboardController> logger;
         private readonly DashboardSettings settings;
+        private readonly MaintenanceRepository maintrepo;
+        private readonly IWebHostEnvironment environment;
 
         public DashboardController(AccountEntityRepository accountRepo,
-            AccountPayableEntityRepository payableRepo, FixedExpenseEntityRepository fixedRepo,
-            IConfiguration configuration, ILogger<DashboardController> logger)
+                                    AccountPayableEntityRepository payableRepo, FixedExpenseEntityRepository fixedRepo,
+                                    MaintenanceRepository maintrepo, IWebHostEnvironment environment,
+                                    IConfiguration configuration, ILogger<DashboardController> logger)
         {
             this.accountRepo = accountRepo;
             this.payableRepo = payableRepo;
             this.fixedRepo = fixedRepo;
             this.logger = logger;
+            this.maintrepo = maintrepo;
+            this.environment = environment;
             settings = configuration.GetSection("Dashboard").Get<DashboardSettings>() ?? new();
         }
 
@@ -102,6 +107,25 @@ namespace CashFlow.React.Server.Controllers
                 logger.LogError(exception, "Unable to load dashboard for {Month}", mes_ano);
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = "Unable to load the dashboard. Please try again." });
+            }
+        }
+
+
+        [HttpGet("DatabaseBackup")]
+        public async Task<IActionResult> DatabaseBackup()
+        {
+            try
+            {
+                if (await maintrepo.UploadDataViaDumpFile(Utils.Common.GetRootPathFile(environment).Replace("Files", "Logs")))
+                    return Ok(new { message = "SUCCESS" });
+                else
+                    throw new Exception("Backup failed");
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = "Unable to run the database backup. Please try again." });
             }
         }
 

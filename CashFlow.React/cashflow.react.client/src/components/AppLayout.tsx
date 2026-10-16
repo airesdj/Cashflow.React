@@ -15,6 +15,9 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import BackupIcon from '@mui/icons-material/BackupOutlined';
 import AccountIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
 import { useAuth } from '../AuthContext';
+import BackupActionDialog from "../DatabaseBackupDialog";
+import { getJson } from '../api';
+import { Alert } from "@mui/material";
 
 const drawerWidth = 238;
 export default function AppLayout() {
@@ -23,7 +26,49 @@ export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(location.pathname.startsWith('/settings'));
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
-  const [backupInfo, setBackupInfo] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const [unknownOutcome, setUnknownOutcome] = useState(false);
+  const [backupOpen, setBackupOpen] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [pageError, setPageError] = useState("");
+
+  const closeAction = () => {
+      if (busy) return;
+
+      setBackupOpen(false);
+      setActionError("");
+      setUnknownOutcome(false);
+  };
+
+ const confirmAction = async () => {
+    if (busy || unknownOutcome) return;
+    setBusy(true);
+    setActionError("");
+    try {
+        const response = await getJson<{ message: string }>(
+          "/api/Dashboard/DatabaseBackup",
+        );
+
+        if (response.message === "SUCCESS"){
+            setBackupOpen(false);
+            setNotice("Database backup completed successfully.");
+            return;
+        }
+
+      setNotice(response.message);
+    } catch (reason) {
+      setActionError(
+        reason instanceof Error
+          ? reason.message
+          : "Unable to complete the database backup.",
+      );
+      setUnknownOutcome(false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
 
   const navItem = (label: string, path: string, icon?: ReactNode) => (
     <ListItemButton key={path} component={Link} to={path} selected={location.pathname === path || location.pathname.startsWith(`${path}/`)}
@@ -74,7 +119,11 @@ export default function AppLayout() {
         <Menu id="user-menu" anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
           <MenuItem disabled><AccountIcon fontSize="small" sx={{ mr: 1.5 }} />{user?.userName}</MenuItem>
           <Divider />
-          <MenuItem onClick={() => { setAnchor(null); setBackupInfo(true); }}><BackupIcon fontSize="small" sx={{ mr: 1.5 }} />Database Backup</MenuItem>
+          <MenuItem onClick={() => {
+                              setActionError("");
+                              setUnknownOutcome(false);
+                              setBackupOpen(true);
+                            }}><BackupIcon fontSize="small" sx={{ mr: 1.5 }} />Database Backup</MenuItem>
           <MenuItem disabled={loggingOut} onClick={() => { setAnchor(null); void logout(); }}><LogoutIcon fontSize="small" sx={{ mr: 1.5 }} />{loggingOut ? 'Signing out…' : 'Logout'}</MenuItem>
         </Menu>
       </Toolbar>
@@ -89,12 +138,38 @@ export default function AppLayout() {
       </Drawer>
     </Box>
     <Box component="main" id="main-content" sx={{ flex: 1, minWidth: 0, p: { xs: 2, sm: 3, xl: 4 }, pt: { xs: 10, sm: 12, xl: 12 } }}>
-      <Box sx={{ maxWidth: 1600, mx: 'auto' }}><Outlet /></Box>
+      <Box sx={{ maxWidth: 1600, mx: 'auto' }}>
+            {notice && (
+              <Alert
+                severity="success"
+                sx={{ mb: 3 }}
+                onClose={() => setNotice("")}
+              >
+                {notice}
+              </Alert>
+            )}
+
+            {pageError && (
+              <Alert
+                severity="error"
+                sx={{ mb: 3 }}
+                onClose={() => setPageError("")}
+              >
+                {pageError}
+              </Alert>
+            )}
+        <Outlet /></Box>
     </Box>
-    <Dialog open={backupInfo} onClose={() => setBackupInfo(false)}>
-      <DialogTitle>Database Backup</DialogTitle>
-      <DialogContent><Typography>This action will be connected when the existing backup process is confirmed.</Typography></DialogContent>
-      <DialogActions><Button onClick={() => setBackupInfo(false)}>Close</Button></DialogActions>
-    </Dialog>
+
+    <BackupActionDialog
+        open={backupOpen}
+        busy={busy}
+        error={actionError}
+        unknownOutcome={unknownOutcome}
+        onClose={closeAction}
+        onConfirm={() => {
+            void confirmAction();
+        }}
+    />
   </Box>;
 }
