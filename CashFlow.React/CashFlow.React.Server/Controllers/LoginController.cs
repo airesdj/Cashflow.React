@@ -30,6 +30,12 @@ public class LoginController : ControllerBase
         return Ok(new { token = tokens.RequestToken });
     }
 
+    [HttpGet("Version")]
+    [AllowAnonymous]
+    public IActionResult Version()
+        => Ok(new { version = GetType().Assembly.GetName().Version?.ToString(3) });
+
+
     [HttpPost("Login")]
     [AllowAnonymous]
     [ValidateAntiForgeryToken]

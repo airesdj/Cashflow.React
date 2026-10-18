@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ComponentProps } from 'react';
 import { Alert, Box, Button, CircularProgress, IconButton, InputAdornment, Paper, Stack, TextField, Typography } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
@@ -15,8 +15,37 @@ export default function LoginPage({ onSignedIn }: Props) {
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [version, setVersion] = useState("");
   const missingUser = submitted && !userName.trim();
   const missingPassword = submitted && !password;
+
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadVersion() {
+        try {
+            const response = await fetch("/api/Login/Version", {
+            signal: controller.signal,
+            });
+
+            if (!response.ok) {
+            throw new Error("Unable to load the application version.");
+            }
+
+            const data: { version: string } = await response.json();
+            setVersion(data.version);
+        } catch (error) {
+            if (!controller.signal.aborted) {
+            console.error(error);
+            }
+        }
+    }
+
+    void loadVersion();
+
+    return () => controller.abort();
+  }, []);
 
   const handleSubmit: NonNullable<ComponentProps<'form'>['onSubmit']> = async (event) => {
     event.preventDefault();
@@ -171,11 +200,29 @@ return (
                   </Box>
                 </Stack>
               </Paper>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    width: "100%",
+                    mt: 0
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary"
+                  sx={{ fontSize: 12, fontWeight: 700 }}>
+                    Cash Flow
+                  </Typography>
 
+                  <Typography variant="body2" color="text.secondary"
+                  sx={{ fontSize: 12, fontWeight: 700 }}>
+                    {version ? `Version ${version}` : ""}
+                  </Typography>
+                </Box>
               <Typography
                 variant="body2"
                 color="text.secondary"
-                sx={{ mt: 3, textAlign: 'center' }}
+                sx={{ mt: 4, textAlign: 'center' }}
               >
                 Cash Flow · Your finances in one place.
               </Typography>
