@@ -162,6 +162,7 @@ function PayableForm({ data, returnUrl, id }: Props) {
           value={values.description}
           disabled={busy || unknownOutcome}
           fullWidth
+          autoComplete="on"
           onChange={(event) => update("description", event.target.value)}
           error={!!errors.description}
           helperText={errors.description}
