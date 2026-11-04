@@ -65,7 +65,7 @@ namespace CashFlow.React.Server.Controllers
                                             .OrderByDescending(x => x.EstimatedValue).ThenBy(x => x.Name).ToList() ?? [];
 
                 var totalTransfer = await accountRepo.GetAccountTotalTransferToSaver(month, year);
-                var marysBalance = await accountRepo.GetAccountTotalTransferMaryPayment(month, year);
+                //var marysBalance = await accountRepo.GetAccountTotalTransferMaryPayment(month, year);
 
                 var totals = balances.GroupBy(x => NormalizeCurrency(x.CurrencyType)).Select(group => new
                 {
@@ -91,7 +91,7 @@ namespace CashFlow.React.Server.Controllers
                     ExpenseTotalByMonthList = monthlyExpenses,
                     mes_ano = selectedMonth.ToString("M-yyyy", CultureInfo.InvariantCulture),
                     TotalTransferToSaverAccount = totalTransfer,
-                    TotalToSaverAccount = marysBalance,
+                    TotalToSaverAccount = 0,
                     Months = months,
                     Today = today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                     ExpenseCurrency = settings.DefaultCurrency,

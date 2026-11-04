@@ -394,25 +394,6 @@ return (
                           </Box>
                         </Stack>
                       )}
-
-                      <Stack
-                        direction="row"
-                        sx={{
-                          mt: 2,
-                          pt: 2,
-                          borderTop: '1px solid #edf1f5',
-                          justifyContent: 'space-between',
-                          gap: 2,
-                        }}
-                      >
-                        <Typography variant="body2" color="text.secondary">
-                          Marys Payment Balance in {selectedLabel}
-                        </Typography>
-
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {money(data.totalToSaverAccount, data.expenseCurrency)}
-                        </Typography>
-                      </Stack>
                     </Box>
                   </DashboardCard>
 
