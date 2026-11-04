@@ -101,7 +101,8 @@ namespace CashFlow.React.Server.Controllers
                 revenues,
                 defaultAccountOID = selectedAccount,
                 defaultRevenueTypeOID = selectedExpense,
-                today = Common.Iso(Common.LocalNow.Date)
+                today = Common.Iso(Common.LocalNow.Date),
+                descriptions = await accountRepo.GetDescriptionList(selectedAccount)
             });
         });
 

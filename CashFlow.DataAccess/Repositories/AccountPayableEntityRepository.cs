@@ -99,6 +99,30 @@ namespace CashFlow.DataAccess.Repositories
             }
         }
 
+        public async Task<string[]> GetDescriptionList(long acccoundoid)
+        {
+            try
+            {
+                var descriptions = await _context.accountspayable.AsNoTracking()
+                                            .Where(x => x.AccountOID == acccoundoid && x.Description != null)
+                                            .Select(x => x.Description)
+                                            .ToArrayAsync();
+
+                return descriptions
+                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                        .Select(x => x!.Trim())
+                        .Where(x => !char.IsDigit(x[0]) && !x.Contains("Fortnightly", StringComparison.OrdinalIgnoreCase))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .OrderBy(x => x)
+                        .ToArray();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+                return null!;
+            }
+        }
+
         public async Task<long> Add(AccountPayableDTO model)
         {
             try

@@ -21,12 +21,18 @@ import {
   Stack,
   TextField,
   Typography,
+  Autocomplete,
+  createFilterOptions
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/SaveOutlined";
 import { useAuth } from "../AuthContext";
 import { currencyCode } from "../format";
 import { loadReceivable, ReceivableError, writeReceivable } from "./api";
 import type { FormData, SaveInput } from "./types";
+
+const descriptionFilter = createFilterOptions<string>({
+  matchFrom: "start",
+});
 
 type Values = {
   accountOID: number;
@@ -157,16 +163,25 @@ function ReceivableForm({ data, returnUrl, id }: Props) {
             </MenuItem>
           ))}
         </TextField>
-        <TextField
-          label="Description"
-          value={values.description}
+
+        <Autocomplete
+          freeSolo
+          options={data.descriptions}
+          inputValue={values.description}
+          filterOptions={descriptionFilter}
+          onInputChange={(_, value) => update("description", value)}
           disabled={busy || unknownOutcome}
-          fullWidth
-          autoComplete="on"
-          onChange={(event) => update("description", event.target.value)}
-          error={!!errors.description}
-          helperText={errors.description}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Description"
+              fullWidth
+              error={!!errors.description}
+              helperText={errors.description}
+            />
+          )}
         />
+
         <TextField
           select
           label="Revenue Type"
@@ -210,6 +225,7 @@ function ReceivableForm({ data, returnUrl, id }: Props) {
             value={values.amount}
             disabled={busy || unknownOutcome}
             onChange={(event) => update("amount", event.target.value)}
+            autoComplete="on"
             error={!!errors.amount}
             helperText={errors.amount}
             slotProps={{

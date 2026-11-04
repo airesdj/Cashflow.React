@@ -35,6 +35,7 @@ export type FormData = {
   defaultAccountOID: number;
   defaultExpenseTypeOID: number;
   today: string;
+  descriptions: string[];
 };
 export type SaveInput = {
   accountOID: number;
