@@ -337,7 +337,7 @@ export default function AccountReceivablePage() {
                         .join(" – ") || "Expense";
                     return (
                       <TableRow key={item.oid} hover>
-                        <TableCell sx={{ whiteSpace: "nowrap", py: 1.8 }}>
+                        <TableCell sx={{ whiteSpace: "nowrap", py: 1.7 }}>
                           <Typography
                             variant="body2"
                             sx={{
