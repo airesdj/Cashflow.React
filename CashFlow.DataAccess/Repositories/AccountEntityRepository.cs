@@ -10,7 +10,8 @@ namespace CashFlow.DataAccess.Repositories
 {
     public class AccountEntityRepository : BaseRepository
     {
-        public long MAIN_REVENUE_SALARY_OID = 12;
+        public long MAIN_REVENUE_SALARY_OID = 27;
+        public long MAIN_REVENUE_SALARY_OID_LEGACY = 12;
         public long MAIN_ACCOUNT_OID = 1;
         private readonly Context _context;
         public AccountEntityRepository(Context context, ILogger<BaseRepository> logger) : base(logger)
@@ -27,7 +28,8 @@ namespace CashFlow.DataAccess.Repositories
             {
                 DateTime? duedate = await _context.accountsreceivable.AsNoTracking()
                                                    .Where(x => x.AccountOID == MAIN_ACCOUNT_OID &&
-                                                               x.RevenueTypeOID == MAIN_REVENUE_SALARY_OID)
+                                                               (x.RevenueTypeOID == MAIN_REVENUE_SALARY_OID ||
+                                                                x.RevenueTypeOID == MAIN_REVENUE_SALARY_OID_LEGACY))
                                                    .OrderByDescending(x => x.OID)
                                                    .Select(x => x.DueDate)
                                                    .FirstOrDefaultAsync();

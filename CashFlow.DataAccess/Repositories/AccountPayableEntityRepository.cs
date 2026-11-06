@@ -228,8 +228,9 @@ namespace CashFlow.DataAccess.Repositories
                     {
                         _context.accountsreceivable.Add(new AccountReceivableEntity()
                         {
-                            AccountOID = 5, //transfer funds account
+                            AccountOID = 8, //transfer to ING account
                             RevenueTypeOID = 13, //money transfer oid
+                            Description = model.Description,
                             DueDate = DateTime.Now,
                             CreatedBy = model.UpdatedBy,
                             CreatedDate = DateTime.Now,

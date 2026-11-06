@@ -194,7 +194,7 @@ namespace CashFlow.React.Server.Controllers
                 input.IsPaid == true &&
                 model.Payday == null &&
                 model.AccountOID == MAIN_ACCOUNT_OID &&
-                (model.Description?.ToLower().Contains("transfer to savings") ?? false))
+                (model.Description?.ToLower().Contains("transfer to travel") ?? false))
             {
                 model.PaymentWithLaunch = true;
             }
