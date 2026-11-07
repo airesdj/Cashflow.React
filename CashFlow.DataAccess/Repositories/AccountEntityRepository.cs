@@ -29,7 +29,8 @@ namespace CashFlow.DataAccess.Repositories
                 DateTime? duedate = await _context.accountsreceivable.AsNoTracking()
                                                    .Where(x => x.AccountOID == MAIN_ACCOUNT_OID &&
                                                                (x.RevenueTypeOID == MAIN_REVENUE_SALARY_OID ||
-                                                                x.RevenueTypeOID == MAIN_REVENUE_SALARY_OID_LEGACY))
+                                                                x.RevenueTypeOID == MAIN_REVENUE_SALARY_OID_LEGACY) &&
+                                                                x.Payday != null)
                                                    .OrderByDescending(x => x.OID)
                                                    .Select(x => x.DueDate)
                                                    .FirstOrDefaultAsync();
@@ -404,7 +405,7 @@ namespace CashFlow.DataAccess.Repositories
             strQuery.Append(" FROM account_receivable");
             strQuery.Append($" WHERE DueDate >= '{launch_start.ToString("yyyy-MM-dd")}' AND DueDate <= '{launch_end.ToString("yyyy-MM-dd")}'");
             strQuery.Append($" AND AccountOID = {oid} ");
-            strQuery.Append($" AND RevenueTypeOID NOT IN (13,18) ");
+            strQuery.Append($" AND RevenueTypeOID NOT IN (13,18,27) ");
             try
             {
                 total_receivable = await _context.Database.SqlQueryRaw<QueryResultModel>(strQuery.ToString())

@@ -40,13 +40,13 @@ namespace CashFlow.DataAccess.Repositories
                 if (revenueoid == 0)
                 {
                     accounts = await _context.accountsreceivable.AsNoTracking()
-                                           .Where(x => x.AccountOID == acccoundoid && x.DueDate >= start && x.DueDate <= end)
+                                           .Where(x => x.AccountOID == acccoundoid && x.DueDate.Date >= start && x.DueDate.Date <= end)
                                            .ToArrayAsync();
                 }
                 else
                 {
                     accounts = await _context.accountsreceivable.AsNoTracking()
-                                           .Where(x => x.AccountOID == acccoundoid && x.RevenueTypeOID == revenueoid && x.DueDate >= start && x.DueDate <= end)
+                                           .Where(x => x.AccountOID == acccoundoid && x.RevenueTypeOID == revenueoid && x.DueDate.Date >= start && x.DueDate.Date <= end)
                                            .ToArrayAsync();
                 }
 
@@ -88,7 +88,7 @@ namespace CashFlow.DataAccess.Repositories
         }
 
 
-        public async Task<long> Add(AccountReceivableDTO model)
+        public async Task<long> Add(AccountReceivableDTO model, string type = "")
         {
             try
             {
@@ -108,6 +108,40 @@ namespace CashFlow.DataAccess.Repositories
                 _context.accountsreceivable.Add(item);
                 await _context.SaveChangesAsync();
                 id = item.OID;
+
+                if (model.AccountOID == 8 && model.RevenueTypeOID == 12 && type == "Aires")
+                {
+                    decimal salary = 1800;
+                    DateTime now = DateTime.Now;
+
+                    item = new AccountReceivableEntity()
+                    {
+                        AccountOID = 1,
+                        DueDate = now,
+                        Description = null,
+                        RevenueTypeOID = 27,
+                        Payday = now,
+                        AccountValue = salary,
+                        CreatedBy = model.CreatedBy,
+                        CreatedDate = now
+                    };
+                    _context.accountsreceivable.Add(item);
+                    await _context.SaveChangesAsync();
+
+                    item = new AccountReceivableEntity()
+                    {
+                        AccountOID = 1,
+                        DueDate = now.AddDays(7),
+                        Description = null,
+                        RevenueTypeOID = 27,
+                        Payday = null,
+                        AccountValue = salary,
+                        CreatedBy = model.CreatedBy,
+                        CreatedDate = now
+                    };
+                    _context.accountsreceivable.Add(item);
+                    await _context.SaveChangesAsync();
+                }
 
                 return id;
             }

@@ -53,6 +53,7 @@ namespace CashFlow.React.Server.Controllers
                 var accountId = accountOID ?? defaults.Item2;
                 var fromDate = defaults.Item3.Date;
                 var toDate = defaults.Item4.Date;
+
                 if ((!string.IsNullOrWhiteSpace(from) && !Common.TryDate(from, out fromDate)) ||
                 (!string.IsNullOrWhiteSpace(to) && !Common.TryDate(to, out toDate)))
                     return BadRequest(new { message = "Use valid dates in yyyy-MM-dd format." });

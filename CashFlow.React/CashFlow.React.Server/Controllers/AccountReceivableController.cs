@@ -216,7 +216,7 @@ namespace CashFlow.React.Server.Controllers
         {
             if (input.AccountOID == 0) return BadRequest(new { message = "Account invalid." });
 
-            return await LaunchPayment(input.AccountOID,
+            return await LaunchPayment(8, //ING
                                  Common.RECEIVABLE_AIRES_PAYMENT_OID,
                                  AppConfig.Settings_ReceivableAiresPaymentValue,
                                  "Aires");
@@ -239,7 +239,7 @@ namespace CashFlow.React.Server.Controllers
                 CreatedDate = now
             };
 
-            if (await accountRepo.Add(modelRequest) == 0) return StatusCode(500, new { message = $"{type}' payment was not added." });
+            if (await accountRepo.Add(modelRequest, type) == 0) return StatusCode(500, new { message = $"{type}' payment was not added." });
             return Ok(new { message = $"{type}' payment added successfully." });
         }, write: true);
 
