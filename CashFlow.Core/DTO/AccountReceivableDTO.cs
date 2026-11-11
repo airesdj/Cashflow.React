@@ -8,6 +8,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CashFlow.Core.DTO
 {
@@ -24,5 +25,8 @@ namespace CashFlow.Core.DTO
         public DateTime CreatedDate { get; set; }
         public string UpdatedBy { get; set; } = null!;
         public DateTime? UpdatedDate { get; set; }
+
+        [NotMapped]
+        public bool PaymentWithLaunch { get; set; }
     }
 }

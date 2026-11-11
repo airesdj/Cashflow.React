@@ -112,15 +112,14 @@ namespace CashFlow.DataAccess.Repositories
                 if (model.AccountOID == 8 && model.RevenueTypeOID == 12 && type == "Aires")
                 {
                     decimal salary = 1800;
-                    DateTime now = DateTime.Now.Date;
 
                     item = new AccountReceivableEntity()
                     {
                         AccountOID = 1,
-                        DueDate = now,
+                        DueDate = DateTime.Now.AddDays(6).Date,
                         Description = null,
                         RevenueTypeOID = 27,
-                        Payday = now,
+                        Payday = null,
                         AccountValue = salary,
                         CreatedBy = model.CreatedBy,
                         CreatedDate = DateTime.Now
@@ -131,7 +130,7 @@ namespace CashFlow.DataAccess.Repositories
                     item = new AccountReceivableEntity()
                     {
                         AccountOID = 1,
-                        DueDate = now.AddDays(7).Date,
+                        DueDate = DateTime.Now.AddDays(13).Date,
                         Description = null,
                         RevenueTypeOID = 27,
                         Payday = null,
@@ -186,6 +185,21 @@ namespace CashFlow.DataAccess.Repositories
                     account.AccountValue = model.AccountValue;
                     account.UpdatedBy = model.UpdatedBy;
                     account.UpdatedDate = model.UpdatedDate;
+
+                    if (model.PaymentWithLaunch)
+                    {
+                        _context.accountspayable.Add(new AccountPayableEntity()
+                        {
+                            AccountOID = 8, //transfer to ING account
+                            ExpenseTypeOID = 13, //money transfer oid
+                            Description = "Transfer for Aires Payment",
+                            DueDate = DateTime.Now,
+                            CreatedBy = model.UpdatedBy,
+                            CreatedDate = DateTime.Now,
+                            AccountValue = model.AccountValue,
+                            Payday = model.Payday
+                        });
+                    }
 
                     await _context.SaveChangesAsync();
 

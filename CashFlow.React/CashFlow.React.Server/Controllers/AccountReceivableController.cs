@@ -194,6 +194,18 @@ namespace CashFlow.React.Server.Controllers
             model.UpdatedBy = User.Identity!.Name!;
             model.UpdatedDate = now;
 
+            const byte MONEY_TRANFER_OID = 27;
+            const byte MAIN_ACCOUNT_OID = 1;
+            if (model.RevenueTypeOID == MONEY_TRANFER_OID &&
+                input.IsPaid == true &&
+                model.Payday == null &&
+                model.AccountOID == MAIN_ACCOUNT_OID &&
+                model.Description == null)
+            {
+                model.PaymentWithLaunch = true;
+            }
+
+
             if (!await accountRepo.Update(model)) return StatusCode(500, new { message = "The payment status was not updated." });
             return Ok(new { message = input.IsPaid.Value ? "Revenue marked as paid." : "Revenue marked as unpaid." });
         }, write: true);
