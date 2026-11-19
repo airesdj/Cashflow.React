@@ -198,7 +198,6 @@ namespace CashFlow.React.Server.Controllers
             const byte MAIN_ACCOUNT_OID = 1;
             if (model.RevenueTypeOID == MONEY_TRANFER_OID &&
                 input.IsPaid == true &&
-                model.Payday == null &&
                 model.AccountOID == MAIN_ACCOUNT_OID &&
                 model.Description == null)
             {
