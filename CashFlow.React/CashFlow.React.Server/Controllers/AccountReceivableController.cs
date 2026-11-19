@@ -199,7 +199,7 @@ namespace CashFlow.React.Server.Controllers
             if (model.RevenueTypeOID == MONEY_TRANFER_OID &&
                 input.IsPaid == true &&
                 model.AccountOID == MAIN_ACCOUNT_OID &&
-                model.Description == null)
+                string.IsNullOrWhiteSpace(model.Description))
             {
                 model.PaymentWithLaunch = true;
             }
