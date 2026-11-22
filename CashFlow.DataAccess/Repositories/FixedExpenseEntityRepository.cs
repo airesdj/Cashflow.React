@@ -158,7 +158,7 @@ namespace CashFlow.DataAccess.Repositories
             {
                 List<ExpenseTypeDTO> list = new List<ExpenseTypeDTO>();
 
-                var excluding = new long[] { 46, 47, 48, 49 };
+                var excluding = new long[] { 12, 46, 47, 48, 49 };
 
                 var expenses_montly = await (from f in _context.fixedexpenses.AsNoTracking()
                                              join e in _context.expenses.AsNoTracking() on f.ExpenseTypeOID equals e.OID
