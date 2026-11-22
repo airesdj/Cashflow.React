@@ -7,6 +7,7 @@ namespace CashFlow.DataAccess.Classes
     {
         public ConnectionStringSettings ConnectionStringSettings { get; set; } = new();
         public string ReceivableAiresPaymentValue { get; set; } = string.Empty;
+        public string ReceivableAiresWeeklyPaymentValue { get; set; } = string.Empty;
         public string ReceivableMarysPaymentValue { get; set; } = string.Empty;
     }
 
@@ -50,6 +51,7 @@ namespace CashFlow.DataAccess.Classes
 
         // URL
         public static decimal Settings_ReceivableAiresPaymentValue => Convert.ToDecimal(_settings.ReceivableAiresPaymentValue);
+        public static decimal Settings_ReceivableAiresWeeklyPaymentValue => Convert.ToDecimal(_settings.ReceivableAiresWeeklyPaymentValue);
         public static decimal Settings_ReceivableMarysPaymentValue => Convert.ToDecimal(_settings.ReceivableMarysPaymentValue);
 
         private static string GetStringConnection(string dbName)

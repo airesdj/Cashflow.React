@@ -12,7 +12,7 @@ import type { Filters, Receivable } from "./types";
 import { dateLabel, money } from "../format";
 
 export type ReceivableAction =
-  { type: "delete" | "payment"; item: Receivable } | { type: "maryPayment" } | { type: "airesPayment" };
+  { type: "delete" | "payment"; item: Receivable } | { type: "maryPayment" } | { type: "airesPayment" } | { type: "airesWeeklyPayment" };
 type Props = {
   action: ReceivableAction | null;
   busy: boolean;
@@ -40,6 +40,8 @@ export default function ReceivableActionDialog({
       ? "Delete Account Receivable"
       : action.type === "maryPayment"
         ? "Launch Mary Payment "
+          : action.type === "airesWeeklyPayment"
+            ? "Launch Aires Weekly Payment "
           : action.type === "airesPayment"
             ? "Launch Aires Payment "
                 : action.item.payday
@@ -49,7 +51,8 @@ export default function ReceivableActionDialog({
     action.type === "delete"
       ? "Delete"
       : action.type === "maryPayment" ||
-        action.type === "airesPayment"
+        action.type === "airesPayment" ||
+        action.type === "airesWeeklyPayment"
         ? "Add receivable"
             : action.item.payday
                 ? "Mark unpaid"
@@ -69,7 +72,8 @@ export default function ReceivableActionDialog({
             {error}
           </Alert>
         )}
-        {action.type === "maryPayment" || action.type === "airesPayment" ? (
+        {action.type === "maryPayment" || action.type === "airesPayment" || 
+        action.type === "airesWeeklyPayment" ? (
           <>
             <Typography>
               Are you sure you wish to launch{" "}

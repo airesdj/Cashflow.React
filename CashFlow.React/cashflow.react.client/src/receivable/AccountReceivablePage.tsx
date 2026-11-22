@@ -120,6 +120,12 @@ export default function AccountReceivablePage() {
                       "PUT",
                       { accountOID: data.filters.accountOID }
                     )                    
+                : action.type === "airesWeeklyPayment"
+                  ? await writeReceivable(
+                      "/api/AccountReceivable/LaunchAiresWeeklyPayment",
+                      "PUT",
+                      { accountOID: data.filters.accountOID }
+                    )                    
                     : await writeReceivable(
                       "/api/AccountReceivable/LaunchAiresPayment",
                       "PUT",
@@ -189,6 +195,14 @@ export default function AccountReceivablePage() {
             onClick={() => openAction({ type: "airesPayment" })}
           >
             Launch Aires Payment
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<LaunchIcon />}
+            disabled={!data || busy}
+            onClick={() => openAction({ type: "airesWeeklyPayment" })}
+          >
+            Launch Aires Weekly Payment
           </Button>
         </Stack>
       </Stack>

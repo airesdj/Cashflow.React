@@ -17,6 +17,7 @@ namespace CashFlow.React.Server.Utils
 
         public static int RECEIVABLE_MARY_PAYMENT_OID = 1;
         public static int RECEIVABLE_AIRES_PAYMENT_OID = 12;
+        public static int RECEIVABLE_AIRES_MONEYTRANSFER_PAYMENT_OID = 27;
 
         private static AESEncryptor logAES = null!;
 

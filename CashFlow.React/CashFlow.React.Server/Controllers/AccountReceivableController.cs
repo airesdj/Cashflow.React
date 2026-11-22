@@ -234,7 +234,20 @@ namespace CashFlow.React.Server.Controllers
         }, write: true);
 
 
-        private Task<IActionResult> LaunchPayment(long accountOID, int revenueTypeOID, decimal paymentValue, string type) => Execute(async () =>
+        [HttpPut("LaunchAiresWeeklyPayment")]
+        public Task<IActionResult> LaunchAiresWeeklyPayment([FromBody] LaunchPaymentRequest input) => Execute(async () =>
+        {
+            if (input.AccountOID == 0) return BadRequest(new { message = "Account invalid." });
+
+            return await LaunchPayment(1, //CBA
+                                 Common.RECEIVABLE_AIRES_MONEYTRANSFER_PAYMENT_OID,
+                                 AppConfig.Settings_ReceivableAiresWeeklyPaymentValue,
+                                 "Aires");
+        }, write: true);
+
+
+        private Task<IActionResult> LaunchPayment(long accountOID, int revenueTypeOID, decimal paymentValue, string type, 
+                                                  string? description = null) => Execute(async () =>
         {
             var now = Common.LocalNow;
 
@@ -244,7 +257,7 @@ namespace CashFlow.React.Server.Controllers
                 Payday = now.Date,
                 RevenueTypeOID = revenueTypeOID,
                 AccountValue = paymentValue,
-                Description = null!,
+                Description = description!,
                 AccountOID = accountOID,
                 CreatedBy = User.Identity!.Name!,
                 CreatedDate = now

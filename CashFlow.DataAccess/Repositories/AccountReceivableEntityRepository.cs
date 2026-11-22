@@ -109,39 +109,6 @@ namespace CashFlow.DataAccess.Repositories
                 await _context.SaveChangesAsync();
                 id = item.OID;
 
-                if (model.AccountOID == 8 && model.RevenueTypeOID == 12 && type == "Aires")
-                {
-                    decimal salary = 1800;
-
-                    item = new AccountReceivableEntity()
-                    {
-                        AccountOID = 1,
-                        DueDate = DateTime.Now.AddDays(6).Date,
-                        Description = null,
-                        RevenueTypeOID = 27,
-                        Payday = null,
-                        AccountValue = salary,
-                        CreatedBy = model.CreatedBy,
-                        CreatedDate = DateTime.Now
-                    };
-                    _context.accountsreceivable.Add(item);
-                    await _context.SaveChangesAsync();
-
-                    item = new AccountReceivableEntity()
-                    {
-                        AccountOID = 1,
-                        DueDate = DateTime.Now.AddDays(13).Date,
-                        Description = null,
-                        RevenueTypeOID = 27,
-                        Payday = null,
-                        AccountValue = salary,
-                        CreatedBy = model.CreatedBy,
-                        CreatedDate = DateTime.Now
-                    };
-                    _context.accountsreceivable.Add(item);
-                    await _context.SaveChangesAsync();
-                }
-
                 return id;
             }
             catch (Exception ex)
