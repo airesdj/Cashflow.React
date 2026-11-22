@@ -115,7 +115,7 @@ namespace CashFlow.DataAccess.Repositories
                         ExpenseTypeOID = 12, //money transfer oid
                         Description = "Transfer for Aires Payment",
                         DueDate = DateTime.Now,
-                        CreatedBy = model.UpdatedBy,
+                        CreatedBy = model.CreatedBy,
                         CreatedDate = DateTime.Now,
                         AccountValue = model.AccountValue,
                         Payday = model.Payday
