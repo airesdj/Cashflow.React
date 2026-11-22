@@ -106,6 +106,22 @@ namespace CashFlow.DataAccess.Repositories
                 };
 
                 _context.accountsreceivable.Add(item);
+
+                if (model.AccountOID == 1 && model.RevenueTypeOID == 27)
+                {
+                    _context.accountspayable.Add(new AccountPayableEntity()
+                    {
+                        AccountOID = 8, //transfer to ING account
+                        ExpenseTypeOID = 12, //money transfer oid
+                        Description = "Transfer for Aires Payment",
+                        DueDate = DateTime.Now,
+                        CreatedBy = model.UpdatedBy,
+                        CreatedDate = DateTime.Now,
+                        AccountValue = model.AccountValue,
+                        Payday = model.Payday
+                    });
+                }
+
                 await _context.SaveChangesAsync();
                 id = item.OID;
 
