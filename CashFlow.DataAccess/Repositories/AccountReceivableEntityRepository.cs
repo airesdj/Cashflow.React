@@ -169,21 +169,6 @@ namespace CashFlow.DataAccess.Repositories
                     account.UpdatedBy = model.UpdatedBy;
                     account.UpdatedDate = model.UpdatedDate;
 
-                    if (model.PaymentWithLaunch)
-                    {
-                        _context.accountspayable.Add(new AccountPayableEntity()
-                        {
-                            AccountOID = 8, //transfer to ING account
-                            ExpenseTypeOID = 12, //money transfer oid
-                            Description = "Transfer for Aires Payment",
-                            DueDate = DateTime.Now,
-                            CreatedBy = model.UpdatedBy,
-                            CreatedDate = DateTime.Now,
-                            AccountValue = model.AccountValue,
-                            Payday = model.Payday
-                        });
-                    }
-
                     await _context.SaveChangesAsync();
 
                     ret = true;
